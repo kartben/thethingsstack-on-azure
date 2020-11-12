@@ -1,0 +1,637 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]"
+    },
+    "prefix": {
+      "type": "string",
+      "maxLength": 6,
+      "metadata": {
+        "description": "Prefix to use when creating Azure resources"
+      },
+      "defaultValue": "ttnv3"
+    },
+    "adminEmail": {
+      "type": "string",
+      "metadata": {
+        "description": "E-mail address of the administrator"
+      }
+    },
+    "adminPassword": {
+      "type": "secureString",
+      "metadata": {
+        "description": "Password for the 'admin' user in the Things Stack console"
+      }
+    },
+    "networkName": {
+      "type": "string",
+      "metadata": {
+        "description": "The name to give to your Things Stack network"
+      },
+      "defaultValue": "The Things Stack on Azure 🚀"
+    },
+    "vmSize": {
+      "type": "string",
+      "metadata": {
+        "description": "VM Size. For available virtual machine sizes, see https://docs.microsoft.com/en-us/azure/templates/microsoft.compute/2019-07-01/virtualmachines#HardwareProfile"
+      },
+      "defaultValue": "Standard_B2s"
+    },
+    "vmUserName": {
+      "type": "string",
+      "metadata": {
+        "description": "VM User name. Used to log into the main virtual machine"
+      }
+    },
+    "vmAuthenticationType": {
+      "type": "string",
+      "metadata": {
+        "description": "VM Authentication type (SSH Public key or password)"
+      },
+      "defaultValue": "password",
+      "allowedValues": [
+        "sshPublicKey",
+        "password"
+      ]
+    },
+    "vmAdminPasswordOrKey": {
+      "type": "secureString"
+    },
+    "psqlPassword": {
+      "type": "secureString",
+      "metadata": {
+        "description": "PostgreSQL database administrator password"
+      }
+    },
+    "psqlSkuCapacity": {
+      "type": "int",
+      "metadata": {
+        "description": "Azure database for PostgreSQL compute capacity (# of vCores)"
+      },
+      "defaultValue": 2,
+      "allowedValues": [
+        2,
+        4,
+        8,
+        16,
+        32,
+        64
+      ]
+    },
+    "dnsLabelPrefix": {
+      "type": "string",
+      "metadata": {
+        "description": "Unique DNS Name for the Public IP used to access the main virtual machine"
+      },
+      "defaultValue": "[format('{0}-stack-{1}', parameters('prefix'), uniqueString(resourceGroup().id))]"
+    }
+  },
+  "functions": [],
+  "variables": {
+    "resourcesPrefix": "[format('{0}{1}', parameters('prefix'), uniqueString(resourceGroup().id))]",
+    "psqlLogin": "ttn_pguser",
+    "psqlDatabaseName": "ttn_lorawan",
+    "vmName": "[format('{0}-vm', variables('resourcesPrefix'))]",
+    "publicIPAddressName": "[format('{0}-publicip', variables('vmName'))]",
+    "networkInterfaceName": "[format('{0}-networkif', variables('vmName'))]",
+    "virtualNetworkName": "[format('{0}-vnet', variables('resourcesPrefix'))]",
+    "subnetName": "[format('{0}-subnet', variables('resourcesPrefix'))]",
+    "subnetRef": "[format('{0}/subnets/{1}', resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName')), variables('subnetName'))]",
+    "networkSecurityGroupName": "[format('{0}-secgroup', variables('resourcesPrefix'))]",
+    "osDiskType": "Standard_LRS",
+    "subnetAddressPrefix": "10.1.0.0/24",
+    "addressPrefix": "10.1.0.0/16",
+    "linuxConfiguration": {
+      "disablePasswordAuthentication": true,
+      "ssh": {
+        "publicKeys": [
+          {
+            "path": "[format('/home/{0}/.ssh/authorized_keys', parameters('vmUserName'))]",
+            "keyData": "[parameters('vmAdminPasswordOrKey')]"
+          }
+        ]
+      }
+    },
+    "keyVaultReaderRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')]",
+    "vmContributorRole": "[resourceId('Microsoft.Authorization/roleDefinitions', '9980e02c-c2be-4d73-94e8-173b1dc7cf3c')]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Network/networkInterfaces",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('networkInterfaceName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "subnet": {
+                "id": "[variables('subnetRef')]"
+              },
+              "privateIPAllocationMethod": "Dynamic",
+              "publicIPAddress": {
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+              }
+            }
+          }
+        ],
+        "networkSecurityGroup": {
+          "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]"
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('networkSecurityGroupName'))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Network/networkSecurityGroups",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('networkSecurityGroupName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "securityRules": [
+          {
+            "name": "SSH",
+            "properties": {
+              "priority": 1000,
+              "protocol": "Tcp",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "22"
+            }
+          },
+          {
+            "name": "HTTP",
+            "properties": {
+              "priority": 2000,
+              "protocol": "Tcp",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "80"
+            }
+          },
+          {
+            "name": "HTTPS",
+            "properties": {
+              "priority": 2100,
+              "protocol": "Tcp",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "443"
+            }
+          },
+          {
+            "name": "TTN_Router",
+            "properties": {
+              "priority": 2200,
+              "protocol": "Udp",
+              "access": "Allow",
+              "direction": "Inbound",
+              "sourceAddressPrefix": "*",
+              "sourcePortRange": "*",
+              "destinationAddressPrefix": "*",
+              "destinationPortRange": "1700"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/virtualNetworks",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnetName')]",
+            "properties": {
+              "addressPrefix": "[variables('subnetAddressPrefix')]",
+              "privateEndpointNetworkPolicies": "Disabled",
+              "privateLinkServiceNetworkPolicies": "Enabled",
+              "serviceEndpoints": [
+                {
+                  "service": "Microsoft.SQL"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Network/publicIPAddresses",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('publicIPAddressName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "publicIPAllocationMethod": "Dynamic",
+        "publicIPAddressVersion": "IPv4",
+        "dnsSettings": {
+          "domainNameLabel": "[parameters('dnsLabelPrefix')]"
+        },
+        "idleTimeoutInMinutes": 4
+      },
+      "sku": {
+        "name": "Basic"
+      }
+    },
+    {
+      "type": "Microsoft.DBForPostgreSQL/servers",
+      "apiVersion": "2017-12-01",
+      "name": "[format('{0}-psql', variables('resourcesPrefix'))]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "administratorLogin": "[variables('psqlLogin')]",
+        "administratorLoginPassword": "[parameters('psqlPassword')]",
+        "createMode": "Default",
+        "sslEnforcement": "Enabled",
+        "publicNetworkAccess": "Enabled",
+        "version": "10"
+      },
+      "sku": {
+        "name": "GP_Gen5_2",
+        "tier": "GeneralPurpose",
+        "family": "Gen5",
+        "capacity": "[parameters('psqlSkuCapacity')]"
+      }
+    },
+    {
+      "type": "Microsoft.DBForPostgreSQL/servers/virtualNetworkRules",
+      "apiVersion": "2017-12-01",
+      "name": "[format('{0}/vnet', format('{0}-psql', variables('resourcesPrefix')))]",
+      "properties": {
+        "virtualNetworkSubnetId": "[variables('subnetRef')]",
+        "ignoreMissingVnetServiceEndpoint": true
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBForPostgreSQL/servers', format('{0}-psql', variables('resourcesPrefix')))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.DBForPostgreSQL/servers/databases",
+      "apiVersion": "2017-12-01-preview",
+      "name": "[format('{0}/{1}', format('{0}-psql', variables('resourcesPrefix')), variables('psqlDatabaseName'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.DBForPostgreSQL/servers', format('{0}-psql', variables('resourcesPrefix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines",
+      "apiVersion": "2020-06-01",
+      "name": "[variables('vmName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "storageProfile": {
+          "osDisk": {
+            "createOption": "FromImage",
+            "managedDisk": {
+              "storageAccountType": "[variables('osDiskType')]"
+            }
+          },
+          "imageReference": {
+            "publisher": "Canonical",
+            "offer": "UbuntuServer",
+            "sku": "18.04-LTS",
+            "version": "latest"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+            }
+          ]
+        },
+        "osProfile": {
+          "computerName": "[variables('vmName')]",
+          "adminUsername": "[parameters('vmUserName')]",
+          "adminPassword": "[parameters('vmAdminPasswordOrKey')]",
+          "linuxConfiguration": "[if(equals(parameters('vmAuthenticationType'), 'password'), null(), variables('linuxConfiguration'))]",
+          "customData": "[reference(resourceId('Microsoft.Resources/deployments', 'generateCloudInitTask'), '2019-10-01').outputs.cloudInitFileAsBase64.value]"
+        }
+      },
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', 'generateCloudInitTask')]",
+        "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-04-01-preview",
+      "name": "[guid(variables('vmName'), variables('keyVaultReaderRole'))]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', variables('vmName')), '2020-06-01', 'full').identity.principalId]",
+        "roleDefinitionId": "[variables('keyVaultReaderRole')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Authorization/roleAssignments",
+      "apiVersion": "2020-04-01-preview",
+      "name": "[guid(variables('vmName'), variables('vmContributorRole'))]",
+      "properties": {
+        "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', variables('vmName')), '2020-06-01', 'full').identity.principalId]",
+        "roleDefinitionId": "[variables('vmContributorRole')]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "generateCloudInitTask",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "resourcesPrefix": {
+            "value": "[variables('resourcesPrefix')]"
+          },
+          "adminEmail": {
+            "value": "[parameters('adminEmail')]"
+          },
+          "adminPassword": {
+            "value": "[parameters('adminPassword')]"
+          },
+          "networkName": {
+            "value": "[parameters('networkName')]"
+          },
+          "fqdn": {
+            "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn]"
+          },
+          "redisHost": {
+            "value": "redistempkartben.redis.cache.windows.net"
+          },
+          "redisPort": {
+            "value": 6380
+          },
+          "redisPassword": {
+            "value": "bBKybuyy0FYES7T6hjc6yW4WBC2ZAglRPLdhIfibPg8="
+          },
+          "psqlHost": {
+            "value": "[reference(resourceId('Microsoft.DBForPostgreSQL/servers', format('{0}-psql', variables('resourcesPrefix')))).fullyQualifiedDomainName]"
+          },
+          "psqlPort": {
+            "value": 5432
+          },
+          "psqlLogin": {
+            "value": "[uriComponent(format('{0}@{1}', variables('psqlLogin'), format('{0}-psql', variables('resourcesPrefix'))))]"
+          },
+          "psqlPassword": {
+            "value": "[uriComponent(parameters('psqlPassword'))]"
+          },
+          "psqlDatabase": {
+            "value": "[variables('psqlDatabaseName')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "eastus"
+            },
+            "resourcesPrefix": {
+              "type": "string"
+            },
+            "adminEmail": {
+              "type": "string"
+            },
+            "adminPassword": {
+              "type": "secureString"
+            },
+            "networkName": {
+              "type": "string",
+              "defaultValue": "The Things Stack"
+            },
+            "fqdn": {
+              "type": "string",
+              "metadata": {
+                "description": "The fully qualified domain name of the server hosting the stack. Ex:  'myttn.francecentral.cloudapp.azure.com'"
+              }
+            },
+            "redisHost": {
+              "type": "string"
+            },
+            "redisPort": {
+              "type": "int"
+            },
+            "redisPassword": {
+              "type": "secureString"
+            },
+            "psqlHost": {
+              "type": "string"
+            },
+            "psqlPort": {
+              "type": "int"
+            },
+            "psqlLogin": {
+              "type": "string"
+            },
+            "psqlPassword": {
+              "type": "secureString"
+            },
+            "psqlDatabase": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "variables": {
+            "scriptName": "generateCloudInit",
+            "identityName": "scratch",
+            "contributorRoleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
+            "contributorRoleDefinitionName": "[guid(variables('identityName'), variables('contributorRoleDefinitionId'))]",
+            "keyVaultSecretOfficerRoleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
+            "keyVaultSecretOfficerRoleDefinitionName": "[guid(variables('identityName'), variables('keyVaultSecretOfficerRoleDefinitionId'))]"
+          },
+          "resources": [
+            {
+              "type": "Microsoft.ManagedIdentity/userAssignedIdentities",
+              "apiVersion": "2018-11-30",
+              "name": "[variables('identityName')]",
+              "location": "[parameters('location')]"
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-04-01-preview",
+              "name": "[variables('contributorRoleDefinitionName')]",
+              "properties": {
+                "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
+                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))).principalId]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Authorization/roleAssignments",
+              "apiVersion": "2020-04-01-preview",
+              "name": "[variables('keyVaultSecretOfficerRoleDefinitionName')]",
+              "properties": {
+                "roleDefinitionId": "[variables('keyVaultSecretOfficerRoleDefinitionId')]",
+                "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))).principalId]",
+                "principalType": "ServicePrincipal"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults",
+              "apiVersion": "2019-09-01",
+              "name": "[format('{0}-kv', parameters('resourcesPrefix'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "tenantId": "[subscription().tenantId]",
+                "sku": {
+                  "family": "A",
+                  "name": "standard"
+                },
+                "enableRbacAuthorization": true
+              }
+            },
+            {
+              "type": "Microsoft.Resources/deploymentScripts",
+              "apiVersion": "2019-10-01-preview",
+              "name": "[variables('scriptName')]",
+              "location": "[parameters('location')]",
+              "kind": "AzureCLI",
+              "identity": {
+                "type": "UserAssigned",
+                "userAssignedIdentities": {
+                  "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]": {}
+                }
+              },
+              "properties": {
+                "azCliVersion": "2.0.80",
+                "retentionInterval": "P1D",
+                "primaryScriptUri": "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/generate-cloudinit.sh",
+                "environmentVariables": [
+                  {
+                    "name": "KEYVAULT_NAME",
+                    "value": "[format('{0}-kv', parameters('resourcesPrefix'))]"
+                  },
+                  {
+                    "name": "NETWORK_NAME",
+                    "value": "[parameters('networkName')]"
+                  },
+                  {
+                    "name": "ADMIN_EMAIL",
+                    "value": "[parameters('adminEmail')]"
+                  },
+                  {
+                    "name": "ADMIN_PASSWORD",
+                    "value": "[parameters('adminPassword')]"
+                  },
+                  {
+                    "name": "FQDN",
+                    "value": "[parameters('fqdn')]"
+                  },
+                  {
+                    "name": "REDIS_HOST",
+                    "value": "[parameters('redisHost')]"
+                  },
+                  {
+                    "name": "REDIS_PORT",
+                    "value": "[string(parameters('redisPort'))]"
+                  },
+                  {
+                    "name": "REDIS_PASSWORD",
+                    "secureValue": "[parameters('redisPassword')]"
+                  },
+                  {
+                    "name": "PSQL_HOST",
+                    "value": "[parameters('psqlHost')]"
+                  },
+                  {
+                    "name": "PSQL_PORT",
+                    "value": "[string(parameters('psqlPort'))]"
+                  },
+                  {
+                    "name": "PSQL_LOGIN",
+                    "value": "[parameters('psqlLogin')]"
+                  },
+                  {
+                    "name": "PSQL_PASSWORD",
+                    "secureValue": "[parameters('psqlPassword')]"
+                  },
+                  {
+                    "name": "PSQL_DATABASE",
+                    "secureValue": "[parameters('psqlDatabase')]"
+                  }
+                ],
+                "supportingScriptUris": [
+                  "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/cloud-init-template"
+                ],
+                "cleanupPreference": "OnSuccess",
+                "timeout": "PT30M"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', format('{0}-kv', parameters('resourcesPrefix')))]",
+                "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "cloudInitFileAsBase64": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Resources/deploymentScripts', variables('scriptName'))).outputs.cloudInitFileAsBase64]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.DBForPostgreSQL/servers', format('{0}-psql', variables('resourcesPrefix')))]",
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "sshCommand": {
+      "type": "string",
+      "value": "[format('ssh {0}@{1}', parameters('vmUserName'), reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn)]"
+    },
+    "ttnConsoleUrl": {
+      "type": "string",
+      "value": "[format('https://{0}/console', reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn)]"
+    }
+  }
+}

@@ -1,0 +1,238 @@
+#cloud-config
+
+package_upgrade: true
+
+users:
+  - default
+  - name: ttn-daemon
+    
+# runcmd:
+#     - pip3 install azure-keyvault-secrets
+#     - pip3 install azure.identity
+
+write_files:
+  - content: |
+        # Identity Server configuration
+        # Email configuration for "%%FQDN%%"
+        is:
+            email:
+                sender-name: '%%NETWORK_NAME%%'
+                sender-address: '%%ADMIN_EMAIL%%'
+                network:
+                    name: '%%NETWORK_NAME%%'
+                    console-url: 'https://%%FQDN%%/console'
+                    identity-server-url: 'https://%%FQDN%%/oauth'
+
+            # If sending email with Sendgrid
+            # provider: sendgrid
+            # sendgrid:
+            #   api-key: '...'              # enter Sendgrid API key
+
+            # If sending email with SMTP
+            # provider: smtp
+            # smtp:
+            #   address:  '...'             # enter SMTP server address
+            #   username: '...'             # enter SMTP server username
+            #   password: '...'             # enter SMTP server password
+
+            # Web UI configuration for "%%FQDN%%":
+            oauth:
+                ui:
+                    canonical-url: 'https://%%FQDN%%/oauth'
+                    site-name: |-
+                        %%NETWORK_NAME%%
+                    title: Account
+                    sub-title: |-
+                        Your %%NETWORK_NAME%% Account
+                    language: en
+                    is:
+                        base-url: 'https://%%FQDN%%/api/v3'
+
+        # Redis server configuration
+        redis:
+            address: '%%REDIS_HOST%%:%%REDIS_PORT%%'
+            tls:   
+                require: true
+
+        # HTTP server configuration
+        http:
+            listen: ':80'
+            listen-tls: ':443'
+            cookie:
+                block-key: ''                # generate 32 bytes (openssl rand -hex 32)
+                hash-key: ''                 # generate 64 bytes (openssl rand -hex 64)
+            metrics:
+                password: 'metrics'               # choose a password
+            pprof:
+                password: 'pprof'                 # choose a password
+
+        # If using custom certificates:
+        #tls:
+        #  source: file
+        #  root-ca: /run/secrets/ca.pem
+        #  certificate: /run/secrets/cert.pem
+        #  key: /run/secrets/key.pem
+
+        # Let's encrypt for "%%FQDN%%"
+        tls:
+            source: 'acme'
+            acme:
+                dir: '/var/lib/acme'
+                email: '%%ADMIN_EMAIL%%'
+                hosts: ['%%FQDN%%']
+                default-host: '%%FQDN%%'
+
+        # If Gateway Server enabled, defaults for "%%FQDN%%":
+        gs:
+            mqtt:
+                public-address: '%%FQDN%%:1882'
+                public-tls-address: '%%FQDN%%:8882'
+            mqtt-v2:
+                public-address: '%%FQDN%%:1881'
+                public-tls-address: '%%FQDN%%:8881'
+
+        # If Gateway Configuration Server enabled, defaults for "%%FQDN%%":
+        gcs:
+            basic-station:
+                default:
+                    lns-uri: 'wss://%%FQDN%%:8887'
+            the-things-gateway:
+                default:
+                    mqtt-server: 'mqtts://%%FQDN%%:8881'
+
+        # Web UI configuration for "%%FQDN%%":
+        console:
+            ui:
+                canonical-url: 'https://%%FQDN%%/console'
+                site-name: |-
+                  %%NETWORK_NAME%%
+                title: Console
+                sub-title: |-
+                  Management platform for %%NETWORK_NAME%%
+                language: en
+                is:
+                    base-url: 'https://%%FQDN%%/api/v3'
+                gs:
+                    base-url: 'https://%%FQDN%%/api/v3'
+                ns:
+                    base-url: 'https://%%FQDN%%/api/v3'
+                as:
+                    base-url: 'https://%%FQDN%%/api/v3'
+                js:
+                    base-url: 'https://%%FQDN%%/api/v3'
+                qrg:
+                    base-url: 'https://%%FQDN%%/api/v3'
+                edtc:
+                    base-url: 'https://%%FQDN%%/api/v3'
+
+            oauth:
+                authorize-url: 'https://%%FQDN%%/oauth/authorize'
+                token-url: 'https://%%FQDN%%/oauth/token'
+                logout-url: 'https://%%FQDN%%/oauth/logout'
+                client-id: 'console'
+                client-secret: 'console'          # choose or generate a secret
+
+        # If Application Server enabled, defaults for "%%FQDN%%":
+        as:
+            mqtt:
+                public-address: 'https://%%FQDN%%:1883'
+                public-tls-address: 'https://%%FQDN%%:8883'
+            webhooks:
+                downlink:
+                public-address: '%%FQDN%%:1885/api/v3'
+
+        # If Device Claiming Server enabled, defaults for "%%FQDN%%":
+        dcs:
+            oauth:
+                authorize-url: 'https://%%FQDN%%/oauth/authorize'
+                token-url: 'https://%%FQDN%%/oauth/token'
+                logout-url: 'https://%%FQDN%%/oauth/logout'
+                client-id: 'device-claiming'
+                client-secret: 'device-claiming'          # choose or generate a secret
+        ui:
+            canonical-url: 'https://%%FQDN%%/claim'
+            as:
+                base-url: 'https://%%FQDN%%/api/v3'
+            dcs:
+                base-url: 'https://%%FQDN%%/api/v3'
+            is:
+                base-url: 'https://%%FQDN%%/api/v3'
+            ns:
+                base-url: 'https://%%FQDN%%/api/v3'
+
+    path: /ttn/lorawan-stack/config.yml
+
+  - content: |
+        [Unit]
+        Description=The Things Stack
+        Documentation=https://thethingsstack.io/
+
+        [Service]
+        Restart=always
+        RestartSec=3
+        WorkingDirectory=/ttn/lorawan-stack
+        EnvironmentFile=/ttn/lorawan-stack/environment
+        ExecStart=/ttn/lorawan-stack/ttn-lw-stack -c /ttn/lorawan-stack/config.yml start $ENABLED_SERVICES
+        LimitNOFILE=65536
+        User=ttn-daemon
+        Group=ttn-daemon
+        AmbientCapabilities=CAP_NET_BIND_SERVICE # allow to bind on ports 80 and 443
+
+        [Install]
+        WantedBy=multi-user.target
+    path: /etc/systemd/system/lorawan-stack.service
+    permissions: '0755'
+
+  - content: |
+        ENABLED_SERVICES=all
+        KEYVAULT_NAME=%%KEYVAULT_NAME%%
+    path: /ttn/lorawan-stack/environment
+
+  - content: |
+        #!/bin/bash
+
+        az login --identity # make sure daemon user is logged in to Azure CLI
+
+        export TTN_LW_HTTP_METRICS_PASSWORD=`az keyvault secret show --name HTTP-METRICS-PASSWORD --vault-name $KEYVAULT_NAME --query value -o tsv`
+        export TTN_LW_HTTP_PPROF_PASSWORD=`az keyvault secret show --name PPROF-PASSWORD --vault-name $KEYVAULT_NAME --query value -o tsv`
+        export TTN_LW_HTTP_COOKIE_BLOCK_KEY=`az keyvault secret show --name COOKIE-BLOCK-KEY --vault-name $KEYVAULT_NAME --query value -o tsv`
+        export TTN_LW_HTTP_COOKIE_HASH_KEY=`az keyvault secret show --name COOKIE-HASH-KEY --vault-name $KEYVAULT_NAME --query value -o tsv`
+        export TTN_LW_CONSOLE_OAUTH_CLIENT_SECRET=`az keyvault secret show --name CONSOLE-OAUTH-CLIENT-SECRET --vault-name $KEYVAULT_NAME --query value -o tsv`
+        export TTN_LW_DEVICE_CLAIMING_OAUTH_CLIENT_SECRET=`az keyvault secret show --name DEVICE-CLAIMING-OAUTH-CLIENT-SECRET --vault-name $KEYVAULT_NAME --query value -o tsv`
+        PSQL_PASSWORD=`az keyvault secret show --name PSQL-PASSWORD --vault-name $KEYVAULT_NAME --query value -o tsv`
+        export TTN_LW_IS_DATABASE_URI=postgres://%%PSQL_LOGIN%%:$PSQL_PASSWORD@%%PSQL_HOST%%:%%PSQL_PORT%%/%%PSQL_DATABASE%%?sslmode=require
+        export TTN_LW_REDIS_PASSWORD=`az keyvault secret show --name REDIS-PASSWORD --vault-name $KEYVAULT_NAME --query value -o tsv`
+        
+        ttn-lw-stack $@
+    path: /ttn/lorawan-stack/ttn-lw-stack
+    owner: ttn-daemon:ttn-daemon
+    permissions: '0755'
+
+runcmd:
+  - curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+  - az login --identity
+
+  - az 
+  
+  - TEMP_DEB="$(mktemp)" && wget -O "$TEMP_DEB" 'https://github.com/TheThingsNetwork/lorawan-stack/releases/download/v3.10.0/lorawan-stack_3.10.0_linux_amd64.deb' && sudo dpkg -i "$TEMP_DEB" && rm -f "$TEMP_DEB"
+
+  - export KEYVAULT_NAME=%%KEYVAULT_NAME%% 
+
+  # Init identity server database
+  - /ttn/lorawan-stack/ttn-lw-stack -c /ttn/lorawan-stack/config.yml is-db init
+  # Create an initial admin user
+  - /ttn/lorawan-stack/ttn-lw-stack -c /ttn/lorawan-stack/config.yml is-db create-admin-user --id admin --email %%ADMIN_EMAIL%% --password `az keyvault secret show --name ADMIN-PASSWORD --vault-name $KEYVAULT_NAME --query value -o tsv`
+  # Register the command-line interface as an OAuth client
+  - /ttn/lorawan-stack/ttn-lw-stack -c /ttn/lorawan-stack/config.yml is-db create-oauth-client --id cli --name "Command Line Interface" --owner admin --no-secret --redirect-uri "local-callback" --redirect-uri "code"
+  # Register the console as an OAuth client
+  - /ttn/lorawan-stack/ttn-lw-stack -c /ttn/lorawan-stack/config.yml is-db create-oauth-client --id console --name "Console" --owner admin --secret `az keyvault secret show --name CONSOLE-OAUTH-CLIENT-SECRET --vault-name $KEYVAULT_NAME --query value -o tsv`  --redirect-uri "https://%%FQDN%%/console/oauth/callback" --redirect-uri "/console/oauth/callback"  --logout-redirect-uri "https://%%FQDN%%/console" --logout-redirect-uri "/console"
+
+  # Create folder for Let's Encrypt certificates
+  - mkdir /var/lib/acme -p && chown ttn-daemon:ttn-daemon /var/lib/acme
+
+  - [ systemctl, daemon-reload ]
+  - [ systemctl, enable, lorawan-stack.service ]
+  - [ systemctl, start, --no-block, lorawan-stack.service ]  
+
+final_message: >
+    The Things Stack is now up and running. Access the console from a web browser at https://%%FQDN%%
