@@ -68,20 +68,27 @@ resource keyvault 'Microsoft.KeyVault/vaults@2019-09-01' = {
             name: 'standard'
         }
         enableRbacAuthorization: true
-        // accessPolicies: [
-        //     // give 'scratch' managed identity the permissions needed to set/access secrets in keyvault
-        //     {
-        //         permissions: {
-        //             secrets: [ 
-        //                 'get'
-        //                 'list'
-        //                 'set' 
-        //             ]
-        //         }
-        //         tenantId: subscription().tenantId
-        //         objectId: mi.properties.principalId
-        //     }
-        // ]
+    }
+}
+
+resource adminPasswordKeyVaultEntry 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
+    name: '${keyvault.name}/ADMIN-PASSWORD'
+    properties: {
+        value: adminPassword
+    }
+}
+
+resource redisPasswordKeyVaultEntry 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
+    name: '${keyvault.name}/REDIS-PASSWORD'
+    properties: {
+        value: redisPassword
+    }
+}
+
+resource psqlPasswordKeyVaultEntry 'Microsoft.KeyVault/vaults/secrets@2019-09-01' = {
+    name: '${keyvault.name}/PSQL-PASSWORD'
+    properties: {
+        value: psqlPassword
     }
 }
 
@@ -114,7 +121,7 @@ resource generateCloudInitDeploymentScript 'Microsoft.Resources/deploymentScript
             }
             {
                 name: 'ADMIN_PASSWORD'
-                value: adminPassword
+                secureValue: adminPassword
             }
             {
                 name: 'FQDN'
@@ -150,7 +157,7 @@ resource generateCloudInitDeploymentScript 'Microsoft.Resources/deploymentScript
             }
             {
                 name: 'PSQL_DATABASE'
-                secureValue: psqlDatabase
+                value: psqlDatabase
             }
         ]
         supportingScriptUris: [

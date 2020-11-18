@@ -529,6 +529,39 @@
               }
             },
             {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2019-09-01",
+              "name": "[format('{0}/ADMIN-PASSWORD', format('{0}-kv', parameters('resourcesPrefix')))]",
+              "properties": {
+                "value": "[parameters('adminPassword')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', format('{0}-kv', parameters('resourcesPrefix')))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2019-09-01",
+              "name": "[format('{0}/REDIS-PASSWORD', format('{0}-kv', parameters('resourcesPrefix')))]",
+              "properties": {
+                "value": "[parameters('redisPassword')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', format('{0}-kv', parameters('resourcesPrefix')))]"
+              ]
+            },
+            {
+              "type": "Microsoft.KeyVault/vaults/secrets",
+              "apiVersion": "2019-09-01",
+              "name": "[format('{0}/PSQL-PASSWORD', format('{0}-kv', parameters('resourcesPrefix')))]",
+              "properties": {
+                "value": "[parameters('psqlPassword')]"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.KeyVault/vaults', format('{0}-kv', parameters('resourcesPrefix')))]"
+              ]
+            },
+            {
               "type": "Microsoft.Resources/deploymentScripts",
               "apiVersion": "2019-10-01-preview",
               "name": "[variables('scriptName')]",
@@ -559,7 +592,7 @@
                   },
                   {
                     "name": "ADMIN_PASSWORD",
-                    "value": "[parameters('adminPassword')]"
+                    "secureValue": "[parameters('adminPassword')]"
                   },
                   {
                     "name": "FQDN",
@@ -595,7 +628,7 @@
                   },
                   {
                     "name": "PSQL_DATABASE",
-                    "secureValue": "[parameters('psqlDatabase')]"
+                    "value": "[parameters('psqlDatabase')]"
                   }
                 ],
                 "supportingScriptUris": [

@@ -20,10 +20,6 @@ az keyvault secret set --name COOKIE-HASH-KEY --vault-name $KEYVAULT_NAME --valu
 az keyvault secret set --name CONSOLE-OAUTH-CLIENT-SECRET --vault-name $KEYVAULT_NAME --value $CONSOLE_OAUTH_CLIENT_SECRET -o none
 az keyvault secret set --name DEVICE-CLAIMING-OAUTH-CLIENT-SECRET --vault-name $KEYVAULT_NAME --value $DEVICE_CLAIMING_OAUTH_CLIENT_SECRET -o none
 
-az keyvault secret set --name ADMIN-PASSWORD --vault-name $KEYVAULT_NAME --value $ADMIN_PASSWORD -o none
-az keyvault secret set --name REDIS-PASSWORD --vault-name $KEYVAULT_NAME --value $REDIS_PASSWORD -o none
-az keyvault secret set --name PSQL-PASSWORD --vault-name $KEYVAULT_NAME --value $PSQL_PASSWORD -o none
-
 sed "s/%%KEYVAULT_NAME%%/$KEYVAULT_NAME/g; \
      s/%%ADMIN_EMAIL%%/$ADMIN_EMAIL/g; \
      s/%%FQDN%%/$FQDN/g; \
