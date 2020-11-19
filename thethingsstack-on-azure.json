@@ -863,10 +863,6 @@
     "ttnConsoleUrl": {
       "type": "string",
       "value": "[format('https://{0}/console', reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn)]"
-    },
-    "redisHost": {
-      "type": "object",
-      "value": "[reference(extensionResourceId(resourceGroup().id, 'Microsoft.Resources/deployments', 'redisDeployment'), '2019-10-01').outputs.outputs]"
     }
   }
 }

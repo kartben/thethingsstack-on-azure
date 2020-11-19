@@ -379,4 +379,3 @@ resource vmContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@20
 
 output sshCommand string = 'ssh ${vmUserName}@${publicIP.properties.dnsSettings.fqdn}'
 output ttnConsoleUrl string = 'https://${publicIP.properties.dnsSettings.fqdn}/console'
-output redisHost object = redisDeployment.outputs
