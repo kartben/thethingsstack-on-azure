@@ -200,6 +200,32 @@ resource nsg 'Microsoft.Network/networkSecurityGroups@2020-06-01' = {
                     destinationPortRange: '1700'
                 }
             }        
+            {
+                name: 'TTN_GatewayServerMQTTS'
+                properties: {
+                    priority: 2300
+                    protocol: 'Tcp'
+                    access: 'Allow'
+                    direction: 'Inbound'
+                    sourceAddressPrefix: '*'
+                    sourcePortRange: '*'
+                    destinationAddressPrefix: '*'
+                    destinationPortRange: '8882'
+                }
+            }        
+            {
+                name: 'TTN_AppServerMQTTS'
+                properties: {
+                    priority: 2400
+                    protocol: 'Tcp'
+                    access: 'Allow'
+                    direction: 'Inbound'
+                    sourceAddressPrefix: '*'
+                    sourcePortRange: '*'
+                    destinationAddressPrefix: '*'
+                    destinationPortRange: '8883'
+                }
+            }        
         ]
     }
 }
