@@ -247,35 +247,18 @@ resource publicIP 'Microsoft.Network/publicIPAddresses@2020-06-01' = {
     }
 }
 
-resource postgreSQL 'Microsoft.DBForPostgreSQL/servers@2017-12-01' = {
-    name: '${resourcesPrefix}-psql'
-    location: location
-    properties: {
-        administratorLogin: psqlLogin
-        administratorLoginPassword: psqlPassword
-        createMode: 'Default'
-        sslEnforcement: 'Enabled'
-        publicNetworkAccess: 'Enabled'
-        version: '10'
+var psqlResourceName = '${resourcesPrefix}-psql'
+module postgreSQLDeployment './postgresql.bicep' = {
+    name: 'postgreSQLDeployment'
+    params: {
+        psqlResourceName: psqlResourceName
+        subnetId: subnetRef
+        vnetID: vnet.id
+        psqlSkuCapacity: psqlSkuCapacity
+        psqlLogin: psqlLogin
+        psqlPassword: psqlPassword
+        psqlDatabaseName: psqlDatabaseName
     }
-    sku: {
-        name: 'GP_Gen5_2'
-        tier: 'GeneralPurpose' // TODO: Basic tier is probably fine (and cheaper!) for small network deployments.
-        family: 'Gen5'
-        capacity: psqlSkuCapacity
-    }
-}
-
-resource postgreSQLVNetRule 'Microsoft.DBForPostgreSQL/servers/virtualNetworkRules@2017-12-01' = {
-    name: '${postgreSQL.name}/vnet'    
-    properties: {
-        virtualNetworkSubnetId: subnetRef
-        ignoreMissingVnetServiceEndpoint: true
-    }
-}
-
-resource postgreSQLDatabase 'Microsoft.DBForPostgreSQL/servers/databases@2017-12-01-preview' = {
-    name: '${postgreSQL.name}/${psqlDatabaseName}'
 }
 
 module redisDeployment './redis.bicep' = {
@@ -283,15 +266,6 @@ module redisDeployment './redis.bicep' = {
     params: {
         redisCacheName: '${resourcesPrefix}-redis'
         subnetId: subnetRef
-    }
-}
-
-module privatednszone './privatednszone.bicep' = {
-    name: 'privatednszoneDeploy'
-    params: {
-        redisInternalIpAddress: redisDeployment.outputs.redisPrivateIpAddress
-        redisFqdn: redisDeployment.outputs.redisHost
-        privateDnsZoneName: 'privatelink.redis.cache.windows.net'
         vnetID: vnet.id
     }
 }
@@ -308,9 +282,9 @@ module generateCloudInitTask './generate-cloudinit.bicep' = {
         redisHost: redisDeployment.outputs.redisHost
         redisPort: redisDeployment.outputs.redisPort
         redisPassword: redisDeployment.outputs.redisKey
-        psqlHost: postgreSQL.properties.fullyQualifiedDomainName
+        psqlHost: postgreSQLDeployment.outputs.fqdn
         psqlPort: 5432
-        psqlLogin: uriComponent('${psqlLogin}@${postgreSQL.name}')
+        psqlLogin: uriComponent('${psqlLogin}@${psqlResourceName}')
         psqlPassword: uriComponent(psqlPassword)
         psqlDatabase: psqlDatabaseName
     }

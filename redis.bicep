@@ -1,6 +1,7 @@
 param location string = resourceGroup().location
 param redisCacheName string
 param subnetId string
+param vnetID string
 
 resource redisCache 'Microsoft.Cache/Redis@2020-06-01' = {
     name: redisCacheName
@@ -39,9 +40,35 @@ resource redisCachePrivateEndpoint 'Microsoft.Network/privateEndpoints@2020-06-0
     }
 }
 
-// Set an output which can be accessed by the module consumer
-output redisObject object = redisCache
-output redisPrivateIpAddress string = redisCachePrivateEndpoint.properties.customDnsConfigs[0].ipAddresses[0]
+var privateDnsZoneName = 'privatelink.redis.cache.windows.net'
+resource privateDnsZone 'Microsoft.Network/privateDnsZones@2018-09-01' = {
+    name: privateDnsZoneName
+    location: 'global'
+}
+
+resource privateDnsZoneVNetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2018-09-01' = {
+    name: '${privateDnsZone.name}/${uniqueString(vnetID)}'
+    location: 'global'
+    properties: {
+        registrationEnabled: false
+        virtualNetwork: {
+            id: vnetID
+        }
+    }
+}
+
+resource privateDnsZoneARecord 'Microsoft.Network/privateDnsZones/A@2018-09-01' = {
+    name: '${privateDnsZone.name}/${redisCache.name}'
+    properties: {
+        aRecords: [
+            {
+                ipv4Address: redisCachePrivateEndpoint.properties.customDnsConfigs[0].ipAddresses[0]
+            }
+        ]
+        ttl: 3600
+    }
+}
+
 output redisHost string = redisCache.properties.hostName
 output redisPort int = redisCache.properties.sslPort
 output redisKey string = listKeys(redisCache.id, '2019-07-01').primaryKey 
