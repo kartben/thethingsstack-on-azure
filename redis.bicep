@@ -2,7 +2,7 @@ param location string = resourceGroup().location
 param redisCacheName string
 param subnetId string
 
-resource redisCache 'Microsoft.Cache/Redis@2019-07-01' = {
+resource redisCache 'Microsoft.Cache/Redis@2020-06-01' = {
     name: redisCacheName
     location: location
     properties: {
