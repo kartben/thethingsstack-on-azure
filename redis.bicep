@@ -35,12 +35,13 @@ resource redisCachePrivateEndpoint 'Microsoft.Network/privateEndpoints@2020-06-0
         subnet: { 
             id: subnetId
         }
+        
     }
 }
 
 // Set an output which can be accessed by the module consumer
 output redisObject object = redisCache
-output redisPrivateEndpointObject object = redisCachePrivateEndpoint
+output redisPrivateIpAddress string = redisCachePrivateEndpoint.properties.customDnsConfigs[0].ipAddresses[0]
 output redisHost string = redisCache.properties.hostName
 output redisPort int = redisCache.properties.sslPort
 output redisKey string = listKeys(redisCache.id, '2019-07-01').primaryKey 

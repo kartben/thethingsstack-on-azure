@@ -278,21 +278,23 @@ resource postgreSQLDatabase 'Microsoft.DBForPostgreSQL/servers/databases@2017-12
     name: '${postgreSQL.name}/${psqlDatabaseName}'
 }
 
-// module redisDeployment './redis.bicep' = {
-//     name: 'redisDeployment'
-//     params: {
-//         redisCacheName: '${resourcesPrefix}-redis'
-//         subnetId: subnetRef
-//     }
-// }
+module redisDeployment './redis.bicep' = {
+    name: 'redisDeployment'
+    params: {
+        redisCacheName: '${resourcesPrefix}-redis'
+        subnetId: subnetRef
+    }
+}
 
-// module privatednszone './privatednszone.bicep' = {
-//     name: 'privatednszoneDeploy'
-//     params: {
-//         privateDnsZoneName: '${resourcesPrefix}-privatednszone'
-//         vnetID: vnet.id
-//     }
-// }
+module privatednszone './privatednszone.bicep' = {
+    name: 'privatednszoneDeploy'
+    params: {
+        redisInternalIpAddress: redisDeployment.outputs.redisPrivateIpAddress
+        redisFqdn: redisDeployment.outputs.redisHost
+        privateDnsZoneName: 'privatelink.redis.cache.windows.net'
+        vnetID: vnet.id
+    }
+}
 
 module generateCloudInitTask './generate-cloudinit.bicep' = {
     name: 'generateCloudInitTask'
@@ -303,9 +305,9 @@ module generateCloudInitTask './generate-cloudinit.bicep' = {
         adminPassword: adminPassword
         networkName: networkName
         fqdn: publicIP.properties.dnsSettings.fqdn
-        redisHost: 'redistempkartben.redis.cache.windows.net' // redisDeployment.outputs.redisHost
-        redisPort: 6380 // redisDeployment.outputs.redisPort
-        redisPassword: 'bBKybuyy0FYES7T6hjc6yW4WBC2ZAglRPLdhIfibPg8=' // redisDeployment.outputs.redisKey
+        redisHost: redisDeployment.outputs.redisHost
+        redisPort: redisDeployment.outputs.redisPort
+        redisPassword: redisDeployment.outputs.redisKey
         psqlHost: postgreSQL.properties.fullyQualifiedDomainName
         psqlPort: 5432
         psqlLogin: uriComponent('${psqlLogin}@${postgreSQL.name}')
@@ -377,3 +379,4 @@ resource vmContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@20
 
 output sshCommand string = 'ssh ${vmUserName}@${publicIP.properties.dnsSettings.fqdn}'
 output ttnConsoleUrl string = 'https://${publicIP.properties.dnsSettings.fqdn}/console'
+output redisHost object = redisDeployment.outputs

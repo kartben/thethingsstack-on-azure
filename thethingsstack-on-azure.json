@@ -332,14 +332,14 @@
           "adminUsername": "[parameters('vmUserName')]",
           "adminPassword": "[parameters('vmAdminPasswordOrKey')]",
           "linuxConfiguration": "[if(equals(parameters('vmAuthenticationType'), 'password'), null(), variables('linuxConfiguration'))]",
-          "customData": "[reference(resourceId('Microsoft.Resources/deployments', 'generateCloudInitTask'), '2019-10-01').outputs.cloudInitFileAsBase64.value]"
+          "customData": "[reference(extensionResourceId(resourceGroup().id, 'Microsoft.Resources/deployments', 'generateCloudInitTask'), '2019-10-01').outputs.cloudInitFileAsBase64.value]"
         }
       },
       "identity": {
         "type": "SystemAssigned"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.Resources/deployments', 'generateCloudInitTask')]",
+        "[extensionResourceId(resourceGroup().id, 'Microsoft.Resources/deployments', 'generateCloudInitTask')]",
         "[resourceId('Microsoft.Network/networkInterfaces', variables('networkInterfaceName'))]"
       ]
     },
@@ -365,6 +365,203 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "redisDeployment",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "redisCacheName": {
+            "value": "[format('{0}-redis', variables('resourcesPrefix'))]"
+          },
+          "subnetId": {
+            "value": "[variables('subnetRef')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]"
+            },
+            "redisCacheName": {
+              "type": "string"
+            },
+            "subnetId": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Cache/Redis",
+              "apiVersion": "2019-07-01",
+              "name": "[parameters('redisCacheName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "enableNonSslPort": false,
+                "sku": {
+                  "name": "Standard",
+                  "family": "C",
+                  "capacity": 0
+                },
+                "redisVersion": "6",
+                "publicNetworkAccess": "Disabled"
+              }
+            },
+            {
+              "type": "Microsoft.Network/privateEndpoints",
+              "apiVersion": "2020-06-01",
+              "name": "[format('{0}-privateendpoint', parameters('redisCacheName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "privateLinkServiceConnections": [
+                  {
+                    "name": "[format('{0}-privateendpoint', parameters('redisCacheName'))]",
+                    "properties": {
+                      "privateLinkServiceId": "[resourceId('Microsoft.Cache/Redis', parameters('redisCacheName'))]",
+                      "groupIds": [
+                        "redisCache"
+                      ]
+                    }
+                  }
+                ],
+                "subnet": {
+                  "id": "[parameters('subnetId')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Cache/Redis', parameters('redisCacheName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "redisObject": {
+              "type": "object",
+              "value": "[reference(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName')), '2019-07-01', 'full')]"
+            },
+            "redisPrivateIpAddress": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-privateendpoint', parameters('redisCacheName')))).customDnsConfigs[0].ipAddresses[0]]"
+            },
+            "redisHost": {
+              "type": "string",
+              "value": "[reference(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName'))).hostName]"
+            },
+            "redisPort": {
+              "type": "int",
+              "value": "[reference(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName'))).sslPort]"
+            },
+            "redisKey": {
+              "type": "string",
+              "value": "[listKeys(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName')), '2019-07-01').primaryKey]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2019-10-01",
+      "name": "privatednszoneDeploy",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "redisInternalIpAddress": {
+            "value": "[reference(extensionResourceId(resourceGroup().id, 'Microsoft.Resources/deployments', 'redisDeployment'), '2019-10-01').outputs.redisPrivateIpAddress.value]"
+          },
+          "redisFqdn": {
+            "value": "[reference(extensionResourceId(resourceGroup().id, 'Microsoft.Resources/deployments', 'redisDeployment'), '2019-10-01').outputs.redisHost.value]"
+          },
+          "privateDnsZoneName": {
+            "value": "privatelink.redis.cache.windows.net"
+          },
+          "vnetID": {
+            "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {
+            "redisInternalIpAddress": {
+              "type": "string"
+            },
+            "redisFqdn": {
+              "type": "string"
+            },
+            "privateDnsZoneName": {
+              "type": "string"
+            },
+            "vnetID": {
+              "type": "string"
+            }
+          },
+          "functions": [],
+          "resources": [
+            {
+              "type": "Microsoft.Network/privateDnsZones",
+              "apiVersion": "2018-09-01",
+              "name": "[parameters('privateDnsZoneName')]",
+              "location": "global"
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
+              "apiVersion": "2018-09-01",
+              "name": "[format('{0}/{1}-link', parameters('privateDnsZoneName'), parameters('vnetID'))]",
+              "location": "global",
+              "properties": {
+                "registrationEnabled": false,
+                "virtualNetwork": {
+                  "id": "[parameters('vnetID')]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', parameters('privateDnsZoneName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Network/privateDnsZones/A",
+              "apiVersion": "2018-09-01",
+              "name": "[format('{0}/{1}', parameters('privateDnsZoneName'), split(parameters('redisFqdn'), '.')[0])]",
+              "properties": {
+                "aRecords": [
+                  {
+                    "ipv4Address": "[parameters('redisInternalIpAddress')]"
+                  }
+                ],
+                "ttl": 3600
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/privateDnsZones', parameters('privateDnsZoneName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "privateDnsZoneId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/privateDnsZones', parameters('privateDnsZoneName'))]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[extensionResourceId(resourceGroup().id, 'Microsoft.Resources/deployments', 'redisDeployment')]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
       ]
     },
     {
@@ -396,13 +593,13 @@
             "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn]"
           },
           "redisHost": {
-            "value": "redistempkartben.redis.cache.windows.net"
+            "value": "[reference(extensionResourceId(resourceGroup().id, 'Microsoft.Resources/deployments', 'redisDeployment'), '2019-10-01').outputs.redisHost.value]"
           },
           "redisPort": {
-            "value": 6380
+            "value": "[reference(extensionResourceId(resourceGroup().id, 'Microsoft.Resources/deployments', 'redisDeployment'), '2019-10-01').outputs.redisPort.value]"
           },
           "redisPassword": {
-            "value": "bBKybuyy0FYES7T6hjc6yW4WBC2ZAglRPLdhIfibPg8="
+            "value": "[reference(extensionResourceId(resourceGroup().id, 'Microsoft.Resources/deployments', 'redisDeployment'), '2019-10-01').outputs.redisKey.value]"
           },
           "psqlHost": {
             "value": "[reference(resourceId('Microsoft.DBForPostgreSQL/servers', format('{0}-psql', variables('resourcesPrefix')))).fullyQualifiedDomainName]"
@@ -653,7 +850,8 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.DBForPostgreSQL/servers', format('{0}-psql', variables('resourcesPrefix')))]",
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]",
+        "[extensionResourceId(resourceGroup().id, 'Microsoft.Resources/deployments', 'redisDeployment')]"
       ]
     }
   ],
@@ -665,6 +863,10 @@
     "ttnConsoleUrl": {
       "type": "string",
       "value": "[format('https://{0}/console', reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn)]"
+    },
+    "redisHost": {
+      "type": "object",
+      "value": "[reference(extensionResourceId(resourceGroup().id, 'Microsoft.Resources/deployments', 'redisDeployment'), '2019-10-01').outputs.outputs]"
     }
   }
 }
