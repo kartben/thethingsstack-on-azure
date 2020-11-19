@@ -483,7 +483,7 @@
             {
               "type": "Microsoft.Network/privateDnsZones/A",
               "apiVersion": "2018-09-01",
-              "name": "[format('{0}/{1}', variables('privateDnsZoneName'), split(reference(resourceId('Microsoft.DBForPostgreSQL/servers', parameters('psqlResourceName'))).fullyQualifiedDomainName, '.')[0])]",
+              "name": "[format('{0}/{1}', variables('privateDnsZoneName'), parameters('psqlResourceName'))]",
               "properties": {
                 "aRecords": [
                   {
@@ -493,7 +493,6 @@
                 "ttl": 3600
               },
               "dependsOn": [
-                "[resourceId('Microsoft.DBForPostgreSQL/servers', parameters('psqlResourceName'))]",
                 "[resourceId('Microsoft.Network/privateEndpoints', format('{0}-privateendpoint', parameters('psqlResourceName')))]",
                 "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]"
               ]
@@ -619,7 +618,7 @@
             {
               "type": "Microsoft.Network/privateDnsZones/A",
               "apiVersion": "2018-09-01",
-              "name": "[format('{0}/{1}', variables('privateDnsZoneName'), split(reference(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName'))).hostName, '.')[0])]",
+              "name": "[format('{0}/{1}', variables('privateDnsZoneName'), parameters('redisCacheName'))]",
               "properties": {
                 "aRecords": [
                   {
