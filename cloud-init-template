@@ -214,7 +214,7 @@ runcmd:
 
   - az 
   
-  - TEMP_DEB="$(mktemp)" && wget -O "$TEMP_DEB" 'https://github.com/TheThingsNetwork/lorawan-stack/releases/download/v3.10.0/lorawan-stack_3.10.0_linux_amd64.deb' && sudo dpkg -i "$TEMP_DEB" && rm -f "$TEMP_DEB"
+  - TEMP_DEB="$(mktemp)" && wget -O "$TEMP_DEB" 'https://github.com/TheThingsNetwork/lorawan-stack/releases/download/v3.10.1/lorawan-stack_3.10.1_linux_amd64.deb' && sudo dpkg -i "$TEMP_DEB" && rm -f "$TEMP_DEB"
 
   - export KEYVAULT_NAME=%%KEYVAULT_NAME%% 
 
