@@ -14,7 +14,9 @@ Skip directly to the [Deployment Instructions](#deployment-instructions) if you 
     - [Azure VM](#azure-vm)
     - [Azure Cache for Redis](#azure-cache-for-redis)
     - [Azure Database for PostgreSQL](#azure-database-for-postgresql)
-- [Pricing Overview](#pricing-overview)
+- [FAQ](#faq)
+  - [How big of a fleet can I connect?](#how-big-of-a-fleet-can-i-connect)
+  - [How much is this going to cost me?](#how-much-is-this-going-to-cost-me)
 
 ## Deployment Instructions
 
@@ -67,9 +69,17 @@ For security and performance reasons, the Redis endpoint is made available to th
 
 For security reasons, the PostgreSQL instance is configured to only allow connections originating from the virtual network where the main VM is running.
 
-## Pricing Overview
+## FAQ
 
-Using the default options provided in the ARM template regarding the sizing of the various resources and services, the monthly cost you're looking at is roughly $200. 
+### How big of a fleet can I connect?
+
+It probably depends on your use case, your communication patterns, and overall network topology. 
+
+However, and to give you a rough idea, a simulated network made of **50 gateways** and **2000 end nodes** sending a 4 byte uplink every ~5 min (with the corresponding RF packet being forwarded through 1 to 3 gateways), the VM's **CPU usage stays well below 10%**, and the `ttn-lw-stack` process uses **~100MB of RAM**…
+
+### How much is this going to cost me?
+
+Using the default size options provided in the ARM template for the various resources and services, the **monthly cost** you're looking at is roughly **$200**. 
 
 You can considerably optimize the cost by looking at [resource reservation](https://docs.microsoft.com/en-us/azure/cost-management-billing/reservations/save-compute-costs-reservations), as well as making sure that you pick the right size for the various resources based on the scale of your LoRaWAN infrastructure.
 
