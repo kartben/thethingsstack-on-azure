@@ -7,21 +7,43 @@ Skip directly to the [Deployment Instructions](#deployment-instructions) if you 
 - [Deployment Instructions](#deployment-instructions)
 - [Deployment Architecture](#deployment-architecture)
   - [Supporting Resources](#supporting-resources)
-    - [Azure Virtual Network](#azure-virtual-network)
-    - [Azure KeyVault](#azure-keyvault)
-    - [Azure Resource Manager - Deployment Script](#azure-resource-manager---deployment-script)
   - [Main Compute Resources](#main-compute-resources)
-    - [Azure VM](#azure-vm)
-    - [Azure Cache for Redis](#azure-cache-for-redis)
-    - [Azure Database for PostgreSQL](#azure-database-for-postgresql)
 - [FAQ](#faq)
   - [How big of a fleet can I connect?](#how-big-of-a-fleet-can-i-connect)
   - [How much is this going to cost me?](#how-much-is-this-going-to-cost-me)
 
 ## Deployment Instructions
 
+**Note:** You will need an Azure subscription to host the various cloud resources that will be supporting your Things Stack environment. You can get an Azure free account [here](https://azure.microsoft.com/en-us/free/) to get started.
+
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fmaster%2Fthethingsstack-on-azure.json)
  [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fmaster%2Fthethingsstack-on-azure.json)
+  
+- Click on the "Deploy to Azure" button below to trigger the deployment process.\
+  This will automatically load up the [ARM template](./thethingsstack-on-azure.json) in the Azure portal, and ask you to input the following deployment parameters:
+
+  - **Resource group**: The resource group in which resources will be created. You can create a new one (recommended, as it helps logically group the various resources supporting your future Things Stack instance), or pick an existing one ;
+  - **Region**: The region where the resource group will be created, if you are creating a new one ;
+  - **Location**: The region where the resources will be deployed. Defaults to the same region as the resource group specified above, which should be fine in most cases.
+  - **Prefix**: A short string that will allow you to easily identify the Azure resources associated to your Things Stack deployment ;
+  - **Admin email**: The e-mail address of the server admin, used as the "sender" for sending system email ;
+  - **Admin password**: The password for user `admin` in the Things Stack console ;
+  - **Network name**: The human-friendly name you want to give to your network. This will show up in several places in the web console and emails sent to your users by the system ;
+  - **VM size**: The size of the Virtual Machine that will be provisioned to host the Things Stack. Default value should be fine for most deployments (see the [FAQ section below about sizing](#how-big-of-a-fleet-can-i-connect)) ;
+  - **VM username**: The username to log into the main VM (ex. over SSH)
+  - **VM login method**: Whether you want the user specified just above to login using a password (less secure), or their public SSH key ;
+  - **VM password/key**: The password or public SSH key of the VM user, depending on what you pick just above ;
+  - **PostgreSQL password**: The password for the PostgreSQL database that will support the Identity Server. Use any (strong) password of your choice here, you may need it if you plan on connecting to the database directly, e.g. for troubleshooting or maintenance. Note: a future version of the deployment template will likely automatically generate a password for you.
+  - **PostgreSQL SKU capacity**: The numbers of virtual cores (vCores) for the Azure Database for PostgreSQL Server instance. Default value of 2 should be fine for most deployments (again,see the [FAQ section below about sizing](#how-big-of-a-fleet-can-i-connect)) ; 
+  - **DNS label prefix**: You can use this parameter to customise the DNS name that will be given to your publicly accessible Thing Stack services. It is recommended to keep the default value.
+
+- Click on "Next: Review + Create" to... well, review your deployment parameters! If you're happy with them (and the validation checks pass), click ¨Create"
+
+- The provisioning of your Things Stack instance will take 10-20 minutes. I recommend you use this time to go through the [Things Stack documentation](https://thethingsstack.io/getting-started/).
+
+- Once the deployment is complete, you can access the console of your brand new Things Stack instance at the URL indicated in the "Outputs" section of your deployment. It should look something like: `https://ttnv3-myinstance.eastus.cloudapp.azure.com/console`
+
+- Enjoy! 
 
 ## Deployment Architecture
 
@@ -33,17 +55,17 @@ More specifically, the following resources are deployed in your Azure Subscripti
 
 ### Supporting Resources
 
-#### Azure Virtual Network
+#### Azure Virtual Network <!-- omit in toc -->
 
 A dedicated virtual network (VNet) is used to have a common, private, IP address space for the various resources and services needed for powering the stack.
 
-#### Azure KeyVault
+#### Azure KeyVault <!-- omit in toc -->
 
 Various keys and secrets are used to make sure that your Things Stack deployment is secure, from the credentials needed to access PostgreSQL or Redis instances, to OAuth secrets, to passwords securing tracing and monitoring endpoints.
 
 All these secrets are securely stored in [Azure Key Vault](https://azure.microsoft.com/en-us/services/key-vault/).
 
-#### Azure Resource Manager - Deployment Script
+#### Azure Resource Manager - Deployment Script <!-- omit in toc -->
 
 Prior to creating the main virtual machine that will run the core services of The Things Stack, an [ARM Deployment Script](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/deployment-script-template) is executed to generate secrets, store them in Azure Key Vault, and preparing the `cloud-init` script that is launched during the first boot of the VM. 
 
@@ -51,13 +73,13 @@ Note: The deployment script is automatically deleted from your subscription 30 m
 
 ### Main Compute Resources
 
-#### Azure VM
+#### Azure VM <!-- omit in toc -->
 
 Hosts the actual network server, alongside its various supporting services (ex. Web console, Identity Server, etc.).
 
 Upon creation and during the first boot, the Virtual Machine runs a cloud-init script that installs The Things Stack, and creates the various configuration files needed.
 
-#### Azure Cache for Redis 
+#### Azure Cache for Redis <!-- omit in toc --> 
 
 Redis is the main data store for the Network Server, Application Server and Join Server. Redis is also used by the Identity Server for caching and can be used by the events system for exchanging events between components.
 
@@ -65,7 +87,7 @@ In order to save you from the burden of managing your own Redis cluster, we are 
 
 For security and performance reasons, the Redis endpoint is made available to the main VM through a private endpoint.
 
-#### Azure Database for PostgreSQL
+#### Azure Database for PostgreSQL <!-- omit in toc --> 
 
 [As per the documentation](https://thethingsstack.io/reference/components/identity-server/) of The Things Stack, the Identity Server provides the registries that store entities such as applications with their end devices, gateways, users, organizations, OAuth clients and authentication providers. It also manages access control through memberships and API keys. The Identity Server needs to be connected to a PostgreSQL-compatible database so an instance of [Azure Database for PostgreSQL](https://azure.microsoft.com/en-us/services/postgresql/) is deployed to that effect.
 
