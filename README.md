@@ -20,16 +20,16 @@ Skip directly to the [Deployment Instructions](#deployment-instructions) if you 
 
 ## Deployment Instructions
 
-TODO
-
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fmaster%2Fthethingsstack-on-azure.json)
  [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fmaster%2Fthethingsstack-on-azure.json)
 
 ## Deployment Architecture
 
-If you're curious to understand better what resources are effectively deployed when using the ARM template provided in this repository to provision a new Things Stack environment in your Azure Subscription, here's what's happening under the hood!
+If you're curious to understand better what resources are effectively deployed when using the ARM template provided in this repository to provision a new Things Stack environment in your Azure Subscription, here's how things look like under the hood!
 
-[TODO: add a diagram]
+![The Things Stack on Azure - Deployment Diagram][deployment-diagram]
+
+More specifically, the following resources are deployed in your Azure Subscription.
 
 ### Supporting Resources
 
@@ -45,7 +45,9 @@ All these secrets are securely stored in [Azure Key Vault](https://azure.microso
 
 #### Azure Resource Manager - Deployment Script
 
-Prior to creating the main virtual machine that will run the core services of The Things Stack, an [ARM Deployment Script](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/deployment-script-template) is executed to generate secrets, store them in Azure Key Vault, and preparing the cloud-init script that is launched during the first boot of the VM.
+Prior to creating the main virtual machine that will run the core services of The Things Stack, an [ARM Deployment Script](https://docs.microsoft.com/en-us/azure/azure-resource-manager/templates/deployment-script-template) is executed to generate secrets, store them in Azure Key Vault, and preparing the `cloud-init` script that is launched during the first boot of the VM. 
+
+Note: The deployment script is automatically deleted from your subscription 30 minutes after having been provisioned and run successfuly.
 
 ### Main Compute Resources
 
@@ -79,12 +81,16 @@ However, and to give you a rough idea, a simulated network made of **50 gateways
 
 ### How much is this going to cost me?
 
-Using the default size options provided in the ARM template for the various resources and services, the **monthly cost** you're looking at is roughly **$200**. 
+Using the default size options provided in the ARM template for the various resources and services, the **monthly cost** you're looking at is roughly **$200**, excluding the cost associated to bandwidth usage. 
 
 You can considerably optimize the cost by looking at [resource reservation](https://docs.microsoft.com/en-us/azure/cost-management-billing/reservations/save-compute-costs-reservations), as well as making sure that you pick the right size for the various resources based on the scale of your LoRaWAN infrastructure.
 
 ![The Things Stack on Azure - Pricing Estimation][pricing-img]
 
+For reference, and at the time of writing (Nov. 2020), LoRaWAN network operators can charge up to a couple dollars per month per device.
 
 [//]: # (Image References)
+
+[deployment-diagram]: ./assets/deployment-diagram.svg "The Things Stack on Azure - Deployment Diagram"
+
 [pricing-img]: ./assets/pricing-overview.png "The Things Stack on Azure - Pricing Estimation"
