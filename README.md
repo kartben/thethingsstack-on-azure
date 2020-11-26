@@ -41,7 +41,11 @@ Skip directly to the [Deployment Instructions](#deployment-instructions) if you 
 
 - The provisioning of your Things Stack instance will take 10-20 minutes. I recommend you use this time to go through the [Things Stack documentation](https://thethingsstack.io/getting-started/).
 
-- Once the deployment is complete, you can access the console of your brand new Things Stack instance at the URL indicated in the "Outputs" section of your deployment. It should look something like: `https://ttnv3-myinstance.eastus.cloudapp.azure.com/console`
+- Once the deployment is complete, you can access the console of your brand new Things Stack instance at the URL indicated in the "Outputs" section of your deployment. It should look something like: `https://ttnv3-myinstance.eastus.cloudapp.azure.com/console`.
+
+  ![The Things Stack on Azure - Outputs on successful deployment][deployment-output]
+  
+  **Important**: The first time you will open the console, **your browser may complain about an untrusted TLS connection**, which is due to the TLS certificate not being fully created yet. Just refresh the browser and all should be back to normal!
 
 - Enjoy! 
 
@@ -112,6 +116,8 @@ You can considerably optimize the cost by looking at [resource reservation](http
 For reference, and at the time of writing (Nov. 2020), LoRaWAN network operators can charge up to a couple dollars per month per device.
 
 [//]: # (Image References)
+
+[deployment-output]: ./assets/deployment-output.png "The Things Stack on Azure - ARM Deployment outputs in the Azure Portal"
 
 [deployment-diagram]: ./assets/deployment-diagram.svg "The Things Stack on Azure - Deployment Diagram"
 
