@@ -1,9 +1,10 @@
 # Deploying The Things Stack v3 on Azure <!-- omit in toc --> 
 
-This repository contains deployment scripts and instruction to help you deploy your own full-blown LoRaWAN server on Azure.
+This repository contains deployment scripts and instructions to help you deploy your own full-blown LoRaWAN server on Azure cloud.
 
-Skip directly to the [Deployment Instructions](#deployment-instructions) if you want to get your private LoRaWAN backend setup in no time. Read more about the deployed infrastructure in the [dedicated section](#deployment-architecture).
+Skip directly to the [Deployment Instructions](#deployment-instructions) if you want to get your private LoRaWAN backend setup in no time. You can also read more about the deployed infrastructure in the [dedicated section](#deployment-architecture).
 
+- [](#)
 - [Deployment Instructions](#deployment-instructions)
 - [Deployment Architecture](#deployment-architecture)
   - [Supporting Resources](#supporting-resources)
@@ -19,12 +20,15 @@ Skip directly to the [Deployment Instructions](#deployment-instructions) if you 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fmaster%2Fthethingsstack-on-azure.json)
  [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fmaster%2Fthethingsstack-on-azure.json)
   
-- Click on the "Deploy to Azure" button below to trigger the deployment process.\
+- Click on the "**Deploy to Azure**" button below to trigger the deployment process.\
   This will automatically load up the [ARM template](./thethingsstack-on-azure.json) in the Azure portal, and ask you to input the following deployment parameters:
 
   - **Resource group**: The resource group in which resources will be created. You can create a new one (recommended, as it helps logically group the various resources supporting your future Things Stack instance), or pick an existing one ;
   - **Region**: The region where the resource group will be created, if you are creating a new one ;
-  - **Location**: The region where the resources will be deployed. Defaults to the same region as the resource group specified above, which should be fine in most cases.
+  - **Location**: The region where the resources will be deployed. Defaults to the same region as the resource group specified above.
+
+  **<font color="red"><u>IMPORTANT</u></font>**: You should select a location from the list [available here](https://docs.microsoft.com/azure/container-instances/container-instances-region-availability#linux-container-groups). The deployment template is relying on a [deployment script](https://docs.microsoft.com/azure/azure-resource-manager/templates/deployment-script-template?tabs=CLI), an Azure feature that is still in preview at the time of writing. 
+  
   - **Prefix**: A short string that will allow you to easily identify the Azure resources associated to your Things Stack deployment ;
   - **Admin email**: The e-mail address of the server admin, used as the "sender" for sending system email ;
   - **Admin password**: The password for user `admin` in the Things Stack console ;
@@ -47,7 +51,7 @@ Skip directly to the [Deployment Instructions](#deployment-instructions) if you 
   
   **Important**: The first time you will open the console, **your browser may complain about an untrusted TLS connection**, which is due to the TLS certificate not being fully created yet. Just refresh the browser and all should be back to normal!
 
-- Enjoy! 
+- Enjoy! 🙂
 
 ## Deployment Architecture
 
