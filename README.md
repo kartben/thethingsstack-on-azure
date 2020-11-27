@@ -1,10 +1,9 @@
-# Deploying The Things Stack v3 on Azure <!-- omit in toc --> 
+# Deploying The Things Stack v3 on Azure <!-- omit in toc -->
 
 This repository contains deployment scripts and instructions to help you deploy your own full-blown LoRaWAN server on Azure cloud.
 
 Skip directly to the [Deployment Instructions](#deployment-instructions) if you want to get your private LoRaWAN backend setup in no time. You can also read more about the deployed infrastructure in the [dedicated section](#deployment-architecture).
 
-- [](#)
 - [Deployment Instructions](#deployment-instructions)
 - [Deployment Architecture](#deployment-architecture)
   - [Supporting Resources](#supporting-resources)
