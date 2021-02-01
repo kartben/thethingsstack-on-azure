@@ -889,7 +889,7 @@
               "properties": {
                 "azCliVersion": "2.0.80",
                 "retentionInterval": "P1D",
-                "primaryScriptUri": "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/generate-cloudinit.sh",
+                "primaryScriptUri": "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/v3.11/generate-cloudinit.sh",
                 "environmentVariables": [
                   {
                     "name": "KEYVAULT_NAME",
@@ -945,7 +945,7 @@
                   }
                 ],
                 "supportingScriptUris": [
-                  "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/cloud-init-template"
+                  "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/v3.11/cloud-init-template"
                 ],
                 "cleanupPreference": "OnSuccess",
                 "timeout": "PT30M"
