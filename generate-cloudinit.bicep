@@ -30,8 +30,7 @@ param psqlDatabase string
 
 var scriptName = 'generateCloudInit'
 var identityName = 'scratch'
-var contributorRoleDefinitionId = resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')
-var contributorRoleDefinitionName = guid(identityName, contributorRoleDefinitionId)
+var customRoleName = 'deployment-script-minimum-privilege-for-deployment-principal'
 var keyVaultSecretOfficerRoleDefinitionId = resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
 var keyVaultSecretOfficerRoleDefinitionName = guid(identityName, keyVaultSecretOfficerRoleDefinitionId)
 
@@ -40,16 +39,39 @@ resource mi 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
     location: location
 }
 
-resource miKeyVaultSecretOfficerRoleAssign 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-    name: contributorRoleDefinitionName
+resource deploymentScriptCustomRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' = {
+    name: guid(customRoleName)
     properties: {
-        roleDefinitionId: contributorRoleDefinitionId
+      roleName: customRoleName
+      description: 'Configure least privilege for the deployment principal in deployment script'
+      permissions: [
+        {
+          actions: [
+            'Microsoft.Storage/storageAccounts/*'
+            'Microsoft.ContainerInstance/containerGroups/*'
+            'Microsoft.Resources/deployments/*'
+            'Microsoft.Resources/deploymentScripts/*'
+            'Microsoft.Storage/register/action'
+            'Microsoft.ContainerInstance/register/action'
+          ]
+        }
+      ]
+      assignableScopes: [
+        resourceGroup().id
+      ]
+    }    
+}
+
+resource miCustomRoleAssign 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+    name: guid(customRoleName, identityName, subscription().id)
+    properties: {
+        roleDefinitionId: deploymentScriptCustomRole.id
         principalId: mi.properties.principalId
         principalType: 'ServicePrincipal'
     }
 }
 
-resource miContributorRoleAssign 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
+resource miKeyVaultSecretOfficerRoleAssign 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
     name: keyVaultSecretOfficerRoleDefinitionName
     properties: {
         roleDefinitionId: keyVaultSecretOfficerRoleDefinitionId

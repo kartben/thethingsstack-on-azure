@@ -789,8 +789,7 @@
           "variables": {
             "scriptName": "generateCloudInit",
             "identityName": "scratch",
-            "contributorRoleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b24988ac-6180-42a0-ab88-20f7382dd24c')]",
-            "contributorRoleDefinitionName": "[guid(variables('identityName'), variables('contributorRoleDefinitionId'))]",
+            "customRoleName": "deployment-script-minimum-privilege-for-deployment-principal",
             "keyVaultSecretOfficerRoleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
             "keyVaultSecretOfficerRoleDefinitionName": "[guid(variables('identityName'), variables('keyVaultSecretOfficerRoleDefinitionId'))]"
           },
@@ -802,15 +801,40 @@
               "location": "[parameters('location')]"
             },
             {
+              "type": "Microsoft.Authorization/roleDefinitions",
+              "apiVersion": "2018-01-01-preview",
+              "name": "[guid(variables('customRoleName'))]",
+              "properties": {
+                "roleName": "[variables('customRoleName')]",
+                "description": "Configure least privilege for the deployment principal in deployment script",
+                "permissions": [
+                  {
+                    "actions": [
+                      "Microsoft.Storage/storageAccounts/*",
+                      "Microsoft.ContainerInstance/containerGroups/*",
+                      "Microsoft.Resources/deployments/*",
+                      "Microsoft.Resources/deploymentScripts/*",
+                      "Microsoft.Storage/register/action",
+                      "Microsoft.ContainerInstance/register/action"
+                    ]
+                  }
+                ],
+                "assignableScopes": [
+                  "[resourceGroup().id]"
+                ]
+              }
+            },
+            {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2020-04-01-preview",
-              "name": "[variables('contributorRoleDefinitionName')]",
+              "name": "[guid(variables('customRoleName'), variables('identityName'), subscription().id)]",
               "properties": {
-                "roleDefinitionId": "[variables('contributorRoleDefinitionId')]",
+                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', guid(variables('customRoleName')))]",
                 "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))).principalId]",
                 "principalType": "ServicePrincipal"
               },
               "dependsOn": [
+                "[resourceId('Microsoft.Authorization/roleDefinitions', guid(variables('customRoleName')))]",
                 "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]"
               ]
             },
