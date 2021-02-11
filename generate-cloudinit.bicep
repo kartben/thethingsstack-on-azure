@@ -92,7 +92,7 @@ resource psqlPasswordKeyVaultEntry 'Microsoft.KeyVault/vaults/secrets@2019-09-01
     }
 }
 
-resource generateCloudInitDeploymentScript 'Microsoft.Resources/deploymentScripts@2019-10-01-preview' = {
+resource generateCloudInitDeploymentScript 'Microsoft.Resources/deploymentScripts@2020-10-01' = {
     name: scriptName
     location: location
     kind: 'AzureCLI'
