@@ -2,30 +2,25 @@ param location string = 'eastus' // resourceGroup().location
 param resourcesPrefix string
 
 param adminEmail string
-param adminPassword string {
-    secure: true
-}
+@secure()
+param adminPassword string
 
-param networkName string {
-    default: 'The Things Stack'
-}
-param fqdn string {
-    metadata: {
-        description: 'The fully qualified domain name of the server hosting the stack. Ex:  \'myttn.francecentral.cloudapp.azure.com\''
-    }
-}
+param networkName string = 'The Things Stack'
+
+@description('The fully qualified domain name of the server hosting the stack. Ex:  \'myttn.francecentral.cloudapp.azure.com\'')
+param fqdn string
+
 param redisHost string 
 param redisPort int
-param redisPassword string {
-  secure: true
-}
+@secure()
+param redisPassword string
 
 param psqlHost string 
 param psqlPort int
 param psqlLogin string
-param psqlPassword string {
-  secure: true
-}
+@secure()
+param psqlPassword string
+
 param psqlDatabase string
 
 var scriptName = 'generateCloudInit'

@@ -6,9 +6,8 @@ param psqlResourceName string
 param psqlSkuCapacity int
 
 param psqlLogin string
-param psqlPassword string {
-  secure: true
-}
+@secure()
+param psqlPassword string
 param psqlDatabaseName string
 
 resource postgreSQL 'Microsoft.DBForPostgreSQL/servers@2017-12-01' = {

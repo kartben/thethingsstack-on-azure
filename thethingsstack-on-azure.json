@@ -1,6 +1,13 @@
 {
   "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.63.48766",
+      "templateHash": "5485728090701579520"
+    }
+  },
   "parameters": {
     "location": {
       "type": "string",
@@ -8,11 +15,11 @@
     },
     "prefix": {
       "type": "string",
-      "maxLength": 6,
+      "defaultValue": "ttnv3",
       "metadata": {
         "description": "Prefix to use when creating Azure resources"
       },
-      "defaultValue": "ttnv3"
+      "maxLength": 6
     },
     "adminEmail": {
       "type": "string",
@@ -28,17 +35,17 @@
     },
     "networkName": {
       "type": "string",
+      "defaultValue": "The Things Stack on Azure 🚀",
       "metadata": {
         "description": "The name to give to your Things Stack network"
-      },
-      "defaultValue": "The Things Stack on Azure 🚀"
+      }
     },
     "vmSize": {
       "type": "string",
+      "defaultValue": "Standard_B2s",
       "metadata": {
         "description": "VM Size. For available virtual machine sizes, see https://docs.microsoft.com/en-us/azure/templates/microsoft.compute/2019-07-01/virtualmachines#HardwareProfile"
-      },
-      "defaultValue": "Standard_B2s"
+      }
     },
     "vmUserName": {
       "type": "string",
@@ -48,10 +55,10 @@
     },
     "vmAuthenticationType": {
       "type": "string",
+      "defaultValue": "password",
       "metadata": {
         "description": "VM Authentication type (SSH Public key or password)"
       },
-      "defaultValue": "password",
       "allowedValues": [
         "sshPublicKey",
         "password"
@@ -68,10 +75,10 @@
     },
     "psqlSkuCapacity": {
       "type": "int",
+      "defaultValue": 2,
       "metadata": {
         "description": "Azure database for PostgreSQL compute capacity (# of vCores)"
       },
-      "defaultValue": 2,
       "allowedValues": [
         2,
         4,
@@ -83,10 +90,10 @@
     },
     "dnsLabelPrefix": {
       "type": "string",
+      "defaultValue": "[format('{0}-stack-{1}', parameters('prefix'), uniqueString(resourceGroup().id))]",
       "metadata": {
         "description": "Unique DNS Name for the Public IP used to access the main virtual machine"
-      },
-      "defaultValue": "[format('{0}-stack-{1}', parameters('prefix'), uniqueString(resourceGroup().id))]"
+      }
     }
   },
   "functions": [],
@@ -388,6 +395,13 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.63.48766",
+              "templateHash": "5055848089161258452"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
@@ -559,6 +573,13 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.63.48766",
+              "templateHash": "14417656651790484903"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
@@ -580,7 +601,7 @@
           },
           "resources": [
             {
-              "type": "Microsoft.Cache/Redis",
+              "type": "Microsoft.Cache/redis",
               "apiVersion": "2020-06-01",
               "name": "[parameters('redisCacheName')]",
               "location": "[parameters('location')]",
@@ -605,7 +626,7 @@
                   {
                     "name": "[format('{0}-privateendpoint', parameters('redisCacheName'))]",
                     "properties": {
-                      "privateLinkServiceId": "[resourceId('Microsoft.Cache/Redis', parameters('redisCacheName'))]",
+                      "privateLinkServiceId": "[resourceId('Microsoft.Cache/redis', parameters('redisCacheName'))]",
                       "groupIds": [
                         "redisCache"
                       ]
@@ -617,7 +638,7 @@
                 }
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Cache/Redis', parameters('redisCacheName'))]"
+                "[resourceId('Microsoft.Cache/redis', parameters('redisCacheName'))]"
               ]
             },
             {
@@ -655,7 +676,7 @@
               },
               "dependsOn": [
                 "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]",
-                "[resourceId('Microsoft.Cache/Redis', parameters('redisCacheName'))]",
+                "[resourceId('Microsoft.Cache/redis', parameters('redisCacheName'))]",
                 "[resourceId('Microsoft.Network/privateEndpoints', format('{0}-privateendpoint', parameters('redisCacheName')))]"
               ]
             }
@@ -663,15 +684,15 @@
           "outputs": {
             "redisHost": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName'))).hostName]"
+              "value": "[reference(resourceId('Microsoft.Cache/redis', parameters('redisCacheName'))).hostName]"
             },
             "redisPort": {
               "type": "int",
-              "value": "[reference(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName'))).sslPort]"
+              "value": "[reference(resourceId('Microsoft.Cache/redis', parameters('redisCacheName'))).sslPort]"
             },
             "redisKey": {
               "type": "string",
-              "value": "[listKeys(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName')), '2019-07-01').primaryKey]"
+              "value": "[listKeys(resourceId('Microsoft.Cache/redis', parameters('redisCacheName')), '2019-07-01').primaryKey]"
             }
           }
         }
@@ -736,6 +757,13 @@
         "template": {
           "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
           "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.4.63.48766",
+              "templateHash": "16516346234492680264"
+            }
+          },
           "parameters": {
             "location": {
               "type": "string",
@@ -1003,13 +1031,6 @@
     "ttnConsoleUrl": {
       "type": "string",
       "value": "[format('https://{0}/console', reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn)]"
-    }
-  },
-  "metadata": {
-    "_generator": {
-      "name": "bicep",
-      "version": "0.3.1.62928",
-      "templateHash": "9766367139090252495"
     }
   }
 }

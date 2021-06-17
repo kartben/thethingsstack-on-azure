@@ -2,100 +2,63 @@
 param location string = resourceGroup().location
 
 // Global resource prefix
-param prefix string {
-    default: 'ttnv3'
-    maxLength: 6
-    metadata: {
-        description: 'Prefix to use when creating Azure resources'
-    }
-}
+@maxLength(6)
+@description('Prefix to use when creating Azure resources')
+param prefix string = 'ttnv3'
 var resourcesPrefix = '${prefix}${uniqueString(resourceGroup().id)}'
 
-param adminEmail string {
-    metadata: {
-        description: 'E-mail address of the administrator'
-    }
-}
+@description('E-mail address of the administrator')
+param adminEmail string
 
-param adminPassword string {
-    secure: true
-    metadata: {
-        description: 'Password for the \'admin\' user in the Things Stack console'
-    }
-}
+@secure()
+@description('Password for the \'admin\' user in the Things Stack console')
+param adminPassword string
 
-param networkName string {
-    default: 'The Things Stack on Azure 🚀'
-    metadata: {
-        description: 'The name to give to your Things Stack network'
-    }
-}
+@description('The name to give to your Things Stack network')
+param networkName string = 'The Things Stack on Azure 🚀'
 
 // The size of the VM.
-param vmSize string {
-    default: 'Standard_B2s'
-    metadata: {
-        description: 'VM Size. For available virtual machine sizes, see https://docs.microsoft.com/en-us/azure/templates/microsoft.compute/2019-07-01/virtualmachines#HardwareProfile'
-    }
-}
+@description('VM Size. For available virtual machine sizes, see https://docs.microsoft.com/en-us/azure/templates/microsoft.compute/2019-07-01/virtualmachines#HardwareProfile')
+param vmSize string = 'Standard_B2s'
 
 // Username for the Virtual Machine.
-param vmUserName string {
-    metadata: {
-        description: 'VM User name. Used to log into the main virtual machine'
-    }
-}
+@description('VM User name. Used to log into the main virtual machine')
+param vmUserName string
 
 // Type of authentication to use on the Virtual Machine. SSH key is recommended.
-param vmAuthenticationType string {
-    default: 'password'
-    allowed: [
-        'sshPublicKey'
-        'password'
-    ]
-    metadata: {
-        description: 'VM Authentication type (SSH Public key or password)'
-    }
-}
+@allowed([
+    'sshPublicKey'
+    'password'
+])
+@description('VM Authentication type (SSH Public key or password)')
+param vmAuthenticationType string = 'password'
 
 // SSH Key or password for the Virtual Machine. SSH key is recommended.
-param vmAdminPasswordOrKey string {
-    secure: true
-}
+@secure()
+param vmAdminPasswordOrKey string
 
 var psqlLogin = 'ttn_pguser'
 
-param psqlPassword string  {
-    secure: true
-    metadata: {
-        description: 'PostgreSQL database administrator password'
-    }
-}
+@secure()
+@description('PostgreSQL database administrator password')
+param psqlPassword string
 
 var psqlDatabaseName = 'ttn_lorawan'
 
-param psqlSkuCapacity int {
-    default: 2
-    allowed: [
-        2
-        4
-        8
-        16
-        32
-        64
-    ]        
-    metadata: {
-        description: 'Azure database for PostgreSQL compute capacity (# of vCores)'
-    }        
-}        
+@allowed([
+    2
+    4
+    8
+    16
+    32
+    64
+])
+@description('Azure database for PostgreSQL compute capacity (# of vCores)')
+param psqlSkuCapacity int = 2
 
 // Unique DNS Name for the Public IP used to access the Virtual Machine.
-param dnsLabelPrefix string {
-    default: '${prefix}-stack-${uniqueString(resourceGroup().id)}'
-    metadata: {
-        description: 'Unique DNS Name for the Public IP used to access the main virtual machine'
-    }
-}
+@description('Unique DNS Name for the Public IP used to access the main virtual machine')
+param dnsLabelPrefix string = '${prefix}-stack-${uniqueString(resourceGroup().id)}'
 
 var vmName = '${resourcesPrefix}-vm'
 var publicIPAddressName = '${vmName}-publicip'
