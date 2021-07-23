@@ -120,7 +120,7 @@ resource generateCloudInitDeploymentScript 'Microsoft.Resources/deploymentScript
         }
     }
     properties: {        
-        azCliVersion: '2.0.80'
+        azCliVersion: '2.24.0'
         retentionInterval: 'P1D'
         primaryScriptUri: 'https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/generate-cloudinit.sh'
         environmentVariables: [

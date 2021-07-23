@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "5485728090701579520"
+      "templateHash": "1769048807104406673"
     }
   },
   "parameters": {
@@ -761,7 +761,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.63.48766",
-              "templateHash": "16516346234492680264"
+              "templateHash": "18101324706791248542"
             }
           },
           "parameters": {
@@ -939,7 +939,7 @@
                 }
               },
               "properties": {
-                "azCliVersion": "2.0.80",
+                "azCliVersion": "2.24.0",
                 "retentionInterval": "P1D",
                 "primaryScriptUri": "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/generate-cloudinit.sh",
                 "environmentVariables": [
