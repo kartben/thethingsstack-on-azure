@@ -250,14 +250,14 @@ module postgreSQLDeployment './postgresql.bicep' = {
     }
 }
 
-module redisDeployment './redis.bicep' = {
-    name: 'redisDeployment'
-    params: {
-        redisCacheName: '${resourcesPrefix}-redis'
-        subnetId: subnetRef
-        vnetID: vnet.id
-    }
-}
+// module redisDeployment './redis.bicep' = {
+//     name: 'redisDeployment'
+//     params: {
+//         redisCacheName: '${resourcesPrefix}-redis'
+//         subnetId: subnetRef
+//         vnetID: vnet.id
+//     }
+// }
 
 module generateCloudInitTask './generate-cloudinit.bicep' = {
     name: 'generateCloudInitTask'
@@ -268,9 +268,9 @@ module generateCloudInitTask './generate-cloudinit.bicep' = {
         adminPassword: adminPassword
         networkName: networkName
         fqdn: publicIP.properties.dnsSettings.fqdn
-        redisHost: redisDeployment.outputs.redisHost
-        redisPort: redisDeployment.outputs.redisPort
-        redisPassword: redisDeployment.outputs.redisKey
+        redisHost: 'redis_dummy_host'
+        redisPort: 1234
+        redisPassword: 'redis_dummy_password'
         psqlHost: postgreSQLDeployment.outputs.fqdn
         psqlPort: 5432
         psqlLogin: uriComponent('${psqlLogin}@${psqlResourceName}')

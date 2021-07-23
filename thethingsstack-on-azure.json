@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.63.48766",
-      "templateHash": "1769048807104406673"
+      "templateHash": "4196088454573182748"
     }
   },
   "parameters": {
@@ -553,157 +553,6 @@
     {
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2019-10-01",
-      "name": "redisDeployment",
-      "properties": {
-        "expressionEvaluationOptions": {
-          "scope": "inner"
-        },
-        "mode": "Incremental",
-        "parameters": {
-          "redisCacheName": {
-            "value": "[format('{0}-redis', variables('resourcesPrefix'))]"
-          },
-          "subnetId": {
-            "value": "[variables('subnetRef')]"
-          },
-          "vnetID": {
-            "value": "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
-          }
-        },
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "metadata": {
-            "_generator": {
-              "name": "bicep",
-              "version": "0.4.63.48766",
-              "templateHash": "14417656651790484903"
-            }
-          },
-          "parameters": {
-            "location": {
-              "type": "string",
-              "defaultValue": "[resourceGroup().location]"
-            },
-            "redisCacheName": {
-              "type": "string"
-            },
-            "subnetId": {
-              "type": "string"
-            },
-            "vnetID": {
-              "type": "string"
-            }
-          },
-          "functions": [],
-          "variables": {
-            "privateDnsZoneName": "privatelink.redis.cache.windows.net"
-          },
-          "resources": [
-            {
-              "type": "Microsoft.Cache/redis",
-              "apiVersion": "2020-06-01",
-              "name": "[parameters('redisCacheName')]",
-              "location": "[parameters('location')]",
-              "properties": {
-                "enableNonSslPort": false,
-                "sku": {
-                  "name": "Standard",
-                  "family": "C",
-                  "capacity": 0
-                },
-                "redisVersion": "6",
-                "publicNetworkAccess": "Disabled"
-              }
-            },
-            {
-              "type": "Microsoft.Network/privateEndpoints",
-              "apiVersion": "2020-06-01",
-              "name": "[format('{0}-privateendpoint', parameters('redisCacheName'))]",
-              "location": "[parameters('location')]",
-              "properties": {
-                "privateLinkServiceConnections": [
-                  {
-                    "name": "[format('{0}-privateendpoint', parameters('redisCacheName'))]",
-                    "properties": {
-                      "privateLinkServiceId": "[resourceId('Microsoft.Cache/redis', parameters('redisCacheName'))]",
-                      "groupIds": [
-                        "redisCache"
-                      ]
-                    }
-                  }
-                ],
-                "subnet": {
-                  "id": "[parameters('subnetId')]"
-                }
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Cache/redis', parameters('redisCacheName'))]"
-              ]
-            },
-            {
-              "type": "Microsoft.Network/privateDnsZones",
-              "apiVersion": "2018-09-01",
-              "name": "[variables('privateDnsZoneName')]",
-              "location": "global"
-            },
-            {
-              "type": "Microsoft.Network/privateDnsZones/virtualNetworkLinks",
-              "apiVersion": "2018-09-01",
-              "name": "[format('{0}/{1}', variables('privateDnsZoneName'), uniqueString(parameters('vnetID')))]",
-              "location": "global",
-              "properties": {
-                "registrationEnabled": false,
-                "virtualNetwork": {
-                  "id": "[parameters('vnetID')]"
-                }
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]"
-              ]
-            },
-            {
-              "type": "Microsoft.Network/privateDnsZones/A",
-              "apiVersion": "2018-09-01",
-              "name": "[format('{0}/{1}', variables('privateDnsZoneName'), parameters('redisCacheName'))]",
-              "properties": {
-                "aRecords": [
-                  {
-                    "ipv4Address": "[reference(resourceId('Microsoft.Network/privateEndpoints', format('{0}-privateendpoint', parameters('redisCacheName')))).customDnsConfigs[0].ipAddresses[0]]"
-                  }
-                ],
-                "ttl": 3600
-              },
-              "dependsOn": [
-                "[resourceId('Microsoft.Network/privateDnsZones', variables('privateDnsZoneName'))]",
-                "[resourceId('Microsoft.Cache/redis', parameters('redisCacheName'))]",
-                "[resourceId('Microsoft.Network/privateEndpoints', format('{0}-privateendpoint', parameters('redisCacheName')))]"
-              ]
-            }
-          ],
-          "outputs": {
-            "redisHost": {
-              "type": "string",
-              "value": "[reference(resourceId('Microsoft.Cache/redis', parameters('redisCacheName'))).hostName]"
-            },
-            "redisPort": {
-              "type": "int",
-              "value": "[reference(resourceId('Microsoft.Cache/redis', parameters('redisCacheName'))).sslPort]"
-            },
-            "redisKey": {
-              "type": "string",
-              "value": "[listKeys(resourceId('Microsoft.Cache/redis', parameters('redisCacheName')), '2019-07-01').primaryKey]"
-            }
-          }
-        }
-      },
-      "dependsOn": [
-        "[resourceId('Microsoft.Network/virtualNetworks', variables('virtualNetworkName'))]"
-      ]
-    },
-    {
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2019-10-01",
       "name": "generateCloudInitTask",
       "properties": {
         "expressionEvaluationOptions": {
@@ -730,13 +579,13 @@
             "value": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))).dnsSettings.fqdn]"
           },
           "redisHost": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'redisDeployment'), '2019-10-01').outputs.redisHost.value]"
+            "value": "redis_dummy_host"
           },
           "redisPort": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'redisDeployment'), '2019-10-01').outputs.redisPort.value]"
+            "value": 1234
           },
           "redisPassword": {
-            "value": "[reference(resourceId('Microsoft.Resources/deployments', 'redisDeployment'), '2019-10-01').outputs.redisKey.value]"
+            "value": "redis_dummy_password"
           },
           "psqlHost": {
             "value": "[reference(resourceId('Microsoft.Resources/deployments', 'postgreSQLDeployment'), '2019-10-01').outputs.fqdn.value]"
@@ -761,7 +610,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.63.48766",
-              "templateHash": "18101324706791248542"
+              "templateHash": "7174509261731835567"
             }
           },
           "parameters": {
@@ -941,7 +790,7 @@
               "properties": {
                 "azCliVersion": "2.24.0",
                 "retentionInterval": "P1D",
-                "primaryScriptUri": "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/generate-cloudinit.sh",
+                "primaryScriptUri": "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/noredis/generate-cloudinit.sh",
                 "environmentVariables": [
                   {
                     "name": "KEYVAULT_NAME",
@@ -997,7 +846,7 @@
                   }
                 ],
                 "supportingScriptUris": [
-                  "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/cloud-init-template"
+                  "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/noredis/cloud-init-template"
                 ],
                 "cleanupPreference": "OnSuccess",
                 "timeout": "PT30M"
@@ -1018,8 +867,7 @@
       },
       "dependsOn": [
         "[resourceId('Microsoft.Resources/deployments', 'postgreSQLDeployment')]",
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]",
-        "[resourceId('Microsoft.Resources/deployments', 'redisDeployment')]"
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPAddressName'))]"
       ]
     }
   ],
