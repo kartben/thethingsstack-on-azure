@@ -16,8 +16,8 @@ Skip directly to the [Deployment Instructions](#deployment-instructions) if you 
 
 **Note:** You will need an Azure subscription to host the various cloud resources that will be supporting your Things Stack environment. You can get an Azure free account [here](https://azure.microsoft.com/en-us/free/) to get started.
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fmaster%2Fthethingsstack-on-azure.json)
- [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fmaster%2Fthethingsstack-on-azure.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fv3.14.1%2Fthethingsstack-on-azure.json)
+ [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fv3.14.1%2Fthethingsstack-on-azure.json)
   
 - Click on the "**Deploy to Azure**" button below to trigger the deployment process.\
   This will automatically load up the [ARM template](./thethingsstack-on-azure.json) in the Azure portal, and ask you to input the following deployment parameters:

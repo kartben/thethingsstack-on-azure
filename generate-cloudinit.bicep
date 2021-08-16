@@ -122,7 +122,7 @@ resource generateCloudInitDeploymentScript 'Microsoft.Resources/deploymentScript
     properties: {        
         azCliVersion: '2.24.0'
         retentionInterval: 'P1D'
-        primaryScriptUri: 'https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/generate-cloudinit.sh'
+        primaryScriptUri: 'https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/v3.14.1/generate-cloudinit.sh'
         environmentVariables: [
             {
                 name: 'KEYVAULT_NAME'
@@ -178,7 +178,7 @@ resource generateCloudInitDeploymentScript 'Microsoft.Resources/deploymentScript
             }
         ]
         supportingScriptUris: [
-            'https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/cloud-init-template'
+            'https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/v3.14.1/cloud-init-template'
         ]
         cleanupPreference: 'OnSuccess'
         timeout: 'PT30M'
