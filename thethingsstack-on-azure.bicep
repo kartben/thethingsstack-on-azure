@@ -15,7 +15,7 @@ param adminEmail string
 param adminPassword string
 
 @description('The name to give to your Things Stack network')
-param networkName string = 'The Things Stack on Azure 🚀'
+param networkName string = 'The Things Stack on Azure'
 
 // The size of the VM.
 @description('VM Size. For available virtual machine sizes, see https://docs.microsoft.com/en-us/azure/templates/microsoft.compute/2019-07-01/virtualmachines#HardwareProfile')
