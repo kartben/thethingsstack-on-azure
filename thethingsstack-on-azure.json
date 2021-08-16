@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.4.63.48766",
-      "templateHash": "1769048807104406673"
+      "version": "0.4.613.9944",
+      "templateHash": "12980273517823541265"
     }
   },
   "parameters": {
@@ -398,8 +398,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.63.48766",
-              "templateHash": "5055848089161258452"
+              "version": "0.4.613.9944",
+              "templateHash": "13164421263438172040"
             }
           },
           "parameters": {
@@ -435,7 +435,7 @@
           },
           "resources": [
             {
-              "type": "Microsoft.DBForPostgreSQL/servers",
+              "type": "Microsoft.DBforPostgreSQL/servers",
               "apiVersion": "2017-12-01",
               "name": "[parameters('psqlResourceName')]",
               "location": "[parameters('location')]",
@@ -455,7 +455,7 @@
               }
             },
             {
-              "type": "Microsoft.DBForPostgreSQL/servers/virtualNetworkRules",
+              "type": "Microsoft.DBforPostgreSQL/servers/virtualNetworkRules",
               "apiVersion": "2017-12-01",
               "name": "[format('{0}/vnet', parameters('psqlResourceName'))]",
               "properties": {
@@ -463,15 +463,15 @@
                 "ignoreMissingVnetServiceEndpoint": true
               },
               "dependsOn": [
-                "[resourceId('Microsoft.DBForPostgreSQL/servers', parameters('psqlResourceName'))]"
+                "[resourceId('Microsoft.DBforPostgreSQL/servers', parameters('psqlResourceName'))]"
               ]
             },
             {
-              "type": "Microsoft.DBForPostgreSQL/servers/databases",
+              "type": "Microsoft.DBforPostgreSQL/servers/databases",
               "apiVersion": "2017-12-01-preview",
               "name": "[format('{0}/{1}', parameters('psqlResourceName'), parameters('psqlDatabaseName'))]",
               "dependsOn": [
-                "[resourceId('Microsoft.DBForPostgreSQL/servers', parameters('psqlResourceName'))]"
+                "[resourceId('Microsoft.DBforPostgreSQL/servers', parameters('psqlResourceName'))]"
               ]
             },
             {
@@ -484,7 +484,7 @@
                   {
                     "name": "[format('{0}-privateendpoint', parameters('psqlResourceName'))]",
                     "properties": {
-                      "privateLinkServiceId": "[resourceId('Microsoft.DBForPostgreSQL/servers', parameters('psqlResourceName'))]",
+                      "privateLinkServiceId": "[resourceId('Microsoft.DBforPostgreSQL/servers', parameters('psqlResourceName'))]",
                       "groupIds": [
                         "postgresqlServer"
                       ]
@@ -496,7 +496,7 @@
                 }
               },
               "dependsOn": [
-                "[resourceId('Microsoft.DBForPostgreSQL/servers', parameters('psqlResourceName'))]"
+                "[resourceId('Microsoft.DBforPostgreSQL/servers', parameters('psqlResourceName'))]"
               ]
             },
             {
@@ -541,7 +541,7 @@
           "outputs": {
             "fqdn": {
               "type": "string",
-              "value": "[reference(resourceId('Microsoft.DBForPostgreSQL/servers', parameters('psqlResourceName'))).fullyQualifiedDomainName]"
+              "value": "[reference(resourceId('Microsoft.DBforPostgreSQL/servers', parameters('psqlResourceName'))).fullyQualifiedDomainName]"
             }
           }
         }
@@ -576,8 +576,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.63.48766",
-              "templateHash": "14417656651790484903"
+              "version": "0.4.613.9944",
+              "templateHash": "5312341702478215850"
             }
           },
           "parameters": {
@@ -760,8 +760,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.4.63.48766",
-              "templateHash": "18101324706791248542"
+              "version": "0.4.613.9944",
+              "templateHash": "12573766080055558229"
             }
           },
           "parameters": {
