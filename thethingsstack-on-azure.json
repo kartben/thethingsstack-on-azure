@@ -35,7 +35,7 @@
     },
     "networkName": {
       "type": "string",
-      "defaultValue": "The Things Stack on Azure 🚀",
+      "defaultValue": "The Things Stack on Azure",
       "metadata": {
         "description": "The name to give to your Things Stack network"
       }
