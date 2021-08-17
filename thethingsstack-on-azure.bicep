@@ -264,6 +264,7 @@ module generateCloudInitTask './generate-cloudinit.bicep' = {
     params: {
         location: location
         resourcesPrefix: resourcesPrefix
+        vmName: vmName
         adminEmail: adminEmail
         adminPassword: adminPassword
         networkName: networkName
