@@ -227,6 +227,17 @@ runcmd:
   # Register the console as an OAuth client
   - /ttn/lorawan-stack/ttn-lw-stack -c /ttn/lorawan-stack/config.yml is-db create-oauth-client --id console --name "Console" --owner admin --secret `az keyvault secret show --name CONSOLE-OAUTH-CLIENT-SECRET --vault-name $KEYVAULT_NAME --query value -o tsv`  --redirect-uri "https://%%FQDN%%/console/oauth/callback" --redirect-uri "/console/oauth/callback"  --logout-redirect-uri "https://%%FQDN%%/console" --logout-redirect-uri "/console"
 
+  # Clone various databases
+  - mkdir /ttn/lorawan-stack/data && cd /ttn/lorawan-stack/data
+  - git clone https://github.com/TheThingsNetwork/lorawan-devices
+  - cd lorawan-devices && git checkout f538e9c80ebf239325efc6e7c2a55945624455d4 && rm .git -Rf && cd ..
+  - git clone https://github.com/TheThingsNetwork/lorawan-frequency-plans
+  - cd lorawan-frequency-plans && git checkout cb60333c065341e094a071b800feecf4c87f2896 && rm .git -Rf && cd ..
+  - git clone https://github.com/TheThingsNetwork/lorawan-webhook-templates
+  - cd lorawan-webhook-templates && git checkout 90160acbbf2eec904cd6c3d5cae0dab9c756778e && rm .git -Rf && cd ..
+  - /ttn/lorawan-stack/ttn-lw-stack -c /ttn/lorawan-stack/config.yml dr-db init
+  - chown ttn-daemon:ttn-daemon data -R
+
   # Create folder for Let's Encrypt certificates
   - mkdir /var/lib/acme -p && chown ttn-daemon:ttn-daemon /var/lib/acme
 
