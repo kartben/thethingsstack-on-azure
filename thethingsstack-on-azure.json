@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "12980273517823541265"
+      "templateHash": "919335879398774225"
     }
   },
   "parameters": {
@@ -761,7 +761,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.613.9944",
-              "templateHash": "12573766080055558229"
+              "templateHash": "9211251322581700222"
             }
           },
           "parameters": {
@@ -819,7 +819,7 @@
             "identityName": "scratch",
             "customRoleName": "deployment-script-minimum-privilege-for-deployment-principal",
             "keyVaultSecretOfficerRoleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
-            "keyVaultSecretOfficerRoleDefinitionName": "[guid(variables('identityName'), variables('keyVaultSecretOfficerRoleDefinitionId'))]"
+            "keyVaultSecretOfficerRoleDefinitionName": "[guid(variables('identityName'), variables('keyVaultSecretOfficerRoleDefinitionId'), resourceGroup().id)]"
           },
           "resources": [
             {
@@ -831,7 +831,7 @@
             {
               "type": "Microsoft.Authorization/roleDefinitions",
               "apiVersion": "2018-01-01-preview",
-              "name": "[guid(variables('customRoleName'))]",
+              "name": "[guid(variables('customRoleName'), resourceGroup().id)]",
               "properties": {
                 "roleName": "[variables('customRoleName')]",
                 "description": "Configure least privilege for the deployment principal in deployment script",
@@ -855,14 +855,14 @@
             {
               "type": "Microsoft.Authorization/roleAssignments",
               "apiVersion": "2020-04-01-preview",
-              "name": "[guid(variables('customRoleName'), variables('identityName'), subscription().id)]",
+              "name": "[guid(variables('customRoleName'), variables('identityName'), resourceGroup().id)]",
               "properties": {
-                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', guid(variables('customRoleName')))]",
+                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', guid(variables('customRoleName'), resourceGroup().id))]",
                 "principalId": "[reference(resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))).principalId]",
                 "principalType": "ServicePrincipal"
               },
               "dependsOn": [
-                "[resourceId('Microsoft.Authorization/roleDefinitions', guid(variables('customRoleName')))]",
+                "[resourceId('Microsoft.Authorization/roleDefinitions', guid(variables('customRoleName'), resourceGroup().id))]",
                 "[resourceId('Microsoft.ManagedIdentity/userAssignedIdentities', variables('identityName'))]"
               ]
             },
