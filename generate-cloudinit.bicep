@@ -27,7 +27,7 @@ var scriptName = 'generateCloudInit'
 var identityName = 'scratch'
 var customRoleName = 'deployment-script-minimum-privilege-for-deployment-principal'
 var keyVaultSecretOfficerRoleDefinitionId = resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')
-var keyVaultSecretOfficerRoleDefinitionName = guid(identityName, keyVaultSecretOfficerRoleDefinitionId)
+var keyVaultSecretOfficerRoleDefinitionName = guid(identityName, keyVaultSecretOfficerRoleDefinitionId, resourceGroup().id)
 
 resource mi 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
     name: identityName
@@ -35,7 +35,7 @@ resource mi 'Microsoft.ManagedIdentity/userAssignedIdentities@2018-11-30' = {
 }
 
 resource deploymentScriptCustomRole 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' = {
-    name: guid(customRoleName)
+    name: guid(customRoleName, resourceGroup().id)
     properties: {
       roleName: customRoleName
       description: 'Configure least privilege for the deployment principal in deployment script'
@@ -58,7 +58,7 @@ resource deploymentScriptCustomRole 'Microsoft.Authorization/roleDefinitions@201
 }
 
 resource miCustomRoleAssign 'Microsoft.Authorization/roleAssignments@2020-04-01-preview' = {
-    name: guid(customRoleName, identityName, subscription().id)
+    name: guid(customRoleName, identityName, resourceGroup().id)
     properties: {
         roleDefinitionId: deploymentScriptCustomRole.id
         principalId: mi.properties.principalId
