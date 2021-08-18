@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "16089006098855433645"
+      "templateHash": "7626987779637855832"
     }
   },
   "parameters": {
@@ -342,7 +342,8 @@
       "name": "[guid(variables('vmName'), variables('keyVaultReaderRole'))]",
       "properties": {
         "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', variables('vmName')), '2020-06-01', 'full').identity.principalId]",
-        "roleDefinitionId": "[variables('keyVaultReaderRole')]"
+        "roleDefinitionId": "[variables('keyVaultReaderRole')]",
+        "principalType": "ServicePrincipal"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"
@@ -354,7 +355,8 @@
       "name": "[guid(variables('vmName'), variables('vmContributorRole'))]",
       "properties": {
         "principalId": "[reference(resourceId('Microsoft.Compute/virtualMachines', variables('vmName')), '2020-06-01', 'full').identity.principalId]",
-        "roleDefinitionId": "[variables('vmContributorRole')]"
+        "roleDefinitionId": "[variables('vmContributorRole')]",
+        "principalType": "ServicePrincipal"
       },
       "dependsOn": [
         "[resourceId('Microsoft.Compute/virtualMachines', variables('vmName'))]"

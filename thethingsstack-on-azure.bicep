@@ -328,6 +328,7 @@ resource keyVaultReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2
     properties: {
         principalId: vm.identity.principalId
         roleDefinitionId: keyVaultReaderRole
+        principalType: 'ServicePrincipal'
     }
 }
 
@@ -338,6 +339,7 @@ resource vmContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@20
     properties: {
         principalId: vm.identity.principalId
         roleDefinitionId: vmContributorRole
+        principalType: 'ServicePrincipal'
     }
 }
 
