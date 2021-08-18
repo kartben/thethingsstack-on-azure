@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "16720849819776273196"
+      "templateHash": "16089006098855433645"
     }
   },
   "parameters": {
@@ -764,7 +764,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.613.9944",
-              "templateHash": "7196281982438339367"
+              "templateHash": "9495854120591088337"
             }
           },
           "parameters": {
@@ -947,7 +947,7 @@
               "properties": {
                 "azCliVersion": "2.24.0",
                 "retentionInterval": "P1D",
-                "primaryScriptUri": "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/v3.14.1/generate-cloudinit.sh",
+                "primaryScriptUri": "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/generate-cloudinit.sh",
                 "environmentVariables": [
                   {
                     "name": "KEYVAULT_NAME",
@@ -1011,7 +1011,7 @@
                   }
                 ],
                 "supportingScriptUris": [
-                  "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/v3.14.1/cloud-init-template"
+                  "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/cloud-init-template"
                 ],
                 "cleanupPreference": "OnSuccess",
                 "timeout": "PT30M"
