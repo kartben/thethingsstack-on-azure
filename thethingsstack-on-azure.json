@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.4.613.9944",
-      "templateHash": "919335879398774225"
+      "templateHash": "16720849819776273196"
     }
   },
   "parameters": {
@@ -717,6 +717,9 @@
           "resourcesPrefix": {
             "value": "[variables('resourcesPrefix')]"
           },
+          "vmName": {
+            "value": "[variables('vmName')]"
+          },
           "adminEmail": {
             "value": "[parameters('adminEmail')]"
           },
@@ -761,7 +764,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.4.613.9944",
-              "templateHash": "9211251322581700222"
+              "templateHash": "7196281982438339367"
             }
           },
           "parameters": {
@@ -770,6 +773,9 @@
               "defaultValue": "eastus"
             },
             "resourcesPrefix": {
+              "type": "string"
+            },
+            "vmName": {
               "type": "string"
             },
             "adminEmail": {
@@ -817,7 +823,7 @@
           "variables": {
             "scriptName": "generateCloudInit",
             "identityName": "scratch",
-            "customRoleName": "deployment-script-minimum-privilege-for-deployment-principal",
+            "customRoleName": "[format('{0}-deployment-script-minimum-privilege-for-deployment-principal', parameters('resourcesPrefix'))]",
             "keyVaultSecretOfficerRoleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', 'b86a8fe4-44ce-4948-aee5-eccb2c155cd7')]",
             "keyVaultSecretOfficerRoleDefinitionName": "[guid(variables('identityName'), variables('keyVaultSecretOfficerRoleDefinitionId'), resourceGroup().id)]"
           },
@@ -941,11 +947,19 @@
               "properties": {
                 "azCliVersion": "2.24.0",
                 "retentionInterval": "P1D",
-                "primaryScriptUri": "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/generate-cloudinit.sh",
+                "primaryScriptUri": "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/v3.14.1/generate-cloudinit.sh",
                 "environmentVariables": [
                   {
                     "name": "KEYVAULT_NAME",
                     "value": "[format('{0}-kv', parameters('resourcesPrefix'))]"
+                  },
+                  {
+                    "name": "VM_NAME",
+                    "value": "[parameters('vmName')]"
+                  },
+                  {
+                    "name": "RG_NAME",
+                    "value": "[resourceGroup().name]"
                   },
                   {
                     "name": "NETWORK_NAME",
@@ -997,7 +1011,7 @@
                   }
                 ],
                 "supportingScriptUris": [
-                  "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/master/cloud-init-template"
+                  "https://raw.githubusercontent.com/kartben/thethingsstack-on-azure/v3.14.1/cloud-init-template"
                 ],
                 "cleanupPreference": "OnSuccess",
                 "timeout": "PT30M"

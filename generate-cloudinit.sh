@@ -21,6 +21,8 @@ az keyvault secret set --name CONSOLE-OAUTH-CLIENT-SECRET --vault-name $KEYVAULT
 az keyvault secret set --name DEVICE-CLAIMING-OAUTH-CLIENT-SECRET --vault-name $KEYVAULT_NAME --value $DEVICE_CLAIMING_OAUTH_CLIENT_SECRET -o none
 
 sed "s/%%KEYVAULT_NAME%%/$KEYVAULT_NAME/g; \
+     s/%%VM_NAME%%/$VM_NAME/g; \
+     s/%%RG_NAME%%/$RG_NAME/g; \
      s/%%ADMIN_EMAIL%%/$ADMIN_EMAIL/g; \
      s/%%FQDN%%/$FQDN/g; \
      s/%%NETWORK_NAME%%/$NETWORK_NAME/g; \

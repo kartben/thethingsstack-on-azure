@@ -1,6 +1,9 @@
 #cloud-config
 
+package_update: true
 package_upgrade: true
+packages:
+    jq
 
 users:
   - default
@@ -173,6 +176,8 @@ write_files:
         WorkingDirectory=/ttn/lorawan-stack
         EnvironmentFile=/ttn/lorawan-stack/environment
         ExecStart=/ttn/lorawan-stack/ttn-lw-stack -c /ttn/lorawan-stack/config.yml start $ENABLED_SERVICES
+        ExecStartPost=/usr/bin/az vm update --name $VM_NAME --resource-group $RG_NAME --set tags.status=TTN_RUNNING -o none
+        ExecStopPost=/usr/bin/az vm update --name $VM_NAME --resource-group $RG_NAME --set tags.status=TTN_STOPPED -o none
         LimitNOFILE=65536
         User=ttn-daemon
         Group=ttn-daemon
@@ -186,6 +191,8 @@ write_files:
   - content: |
         ENABLED_SERVICES=all
         KEYVAULT_NAME=%%KEYVAULT_NAME%%
+        VM_NAME=%%VM_NAME%%
+        RG_NAME=%%RG_NAME%%
     path: /ttn/lorawan-stack/environment
 
   - content: |
@@ -214,9 +221,9 @@ runcmd:
 
   - az 
   
-  - TEMP_DEB="$(mktemp)" && wget -O "$TEMP_DEB" 'https://github.com/TheThingsNetwork/lorawan-stack/releases/download/v3.10.7/lorawan-stack_3.10.7_linux_amd64.deb' && sudo dpkg -i "$TEMP_DEB" && rm -f "$TEMP_DEB"
-
   - export KEYVAULT_NAME=%%KEYVAULT_NAME%% 
+
+  - TEMP_DEB="$(mktemp)" && wget -O "$TEMP_DEB" 'https://github.com/TheThingsNetwork/lorawan-stack/releases/download/v3.14.1/lorawan-stack_3.14.1_linux_amd64.deb' && sudo dpkg -i "$TEMP_DEB" && rm -f "$TEMP_DEB"
 
   # Init identity server database
   - /ttn/lorawan-stack/ttn-lw-stack -c /ttn/lorawan-stack/config.yml is-db init
@@ -226,6 +233,22 @@ runcmd:
   - /ttn/lorawan-stack/ttn-lw-stack -c /ttn/lorawan-stack/config.yml is-db create-oauth-client --id cli --name "Command Line Interface" --owner admin --no-secret --redirect-uri "local-callback" --redirect-uri "code"
   # Register the console as an OAuth client
   - /ttn/lorawan-stack/ttn-lw-stack -c /ttn/lorawan-stack/config.yml is-db create-oauth-client --id console --name "Console" --owner admin --secret `az keyvault secret show --name CONSOLE-OAUTH-CLIENT-SECRET --vault-name $KEYVAULT_NAME --query value -o tsv`  --redirect-uri "https://%%FQDN%%/console/oauth/callback" --redirect-uri "/console/oauth/callback"  --logout-redirect-uri "https://%%FQDN%%/console" --logout-redirect-uri "/console"
+
+  # Clone various databases
+  - mkdir /ttn/lorawan-stack/data && cd /ttn/lorawan-stack/data
+
+  - git clone https://github.com/TheThingsNetwork/lorawan-devices
+  - cd lorawan-devices && git checkout f538e9c80ebf239325efc6e7c2a55945624455d4 && rm .git -Rf && cd ..
+
+  - git clone https://github.com/TheThingsNetwork/lorawan-frequency-plans
+  - cd lorawan-frequency-plans && git checkout cb60333c065341e094a071b800feecf4c87f2896 && rm .git -Rf && cd ..
+
+  - git clone https://github.com/TheThingsNetwork/lorawan-webhook-templates
+  - cd lorawan-webhook-templates && git checkout 90160acbbf2eec904cd6c3d5cae0dab9c756778e && rm .git -Rf && cd ..
+
+  - cd /ttn/lorawan-stack
+  - /ttn/lorawan-stack/ttn-lw-stack -c /ttn/lorawan-stack/config.yml dr-db init
+  - chown ttn-daemon:ttn-daemon data -R
 
   # Create folder for Let's Encrypt certificates
   - mkdir /var/lib/acme -p && chown ttn-daemon:ttn-daemon /var/lib/acme

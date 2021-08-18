@@ -16,8 +16,8 @@ Skip directly to the [Deployment Instructions](#deployment-instructions) if you 
 
 **Note:** You will need an Azure subscription to host the various cloud resources that will be supporting your Things Stack environment. You can get an Azure free account [here](https://azure.microsoft.com/en-us/free/) to get started.
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fmaster%2Fthethingsstack-on-azure.json)
- [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fmaster%2Fthethingsstack-on-azure.json)
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fv3.14.1%2Fthethingsstack-on-azure.json)
+ [![Visualize](https://raw.githubusercontent.com/Azure/azure-quickstart-templates/master/1-CONTRIBUTION-GUIDE/images/visualizebutton.svg?sanitize=true)](http://armviz.io/#/?load=https%3A%2F%2Fraw.githubusercontent.com%2Fkartben%2Fthethingsstack-on-azure%2Fv3.14.1%2Fthethingsstack-on-azure.json)
   
 - Click on the "**Deploy to Azure**" button below to trigger the deployment process.\
   This will automatically load up the [ARM template](./thethingsstack-on-azure.json) in the Azure portal, and ask you to input the following deployment parameters:
@@ -42,13 +42,15 @@ Skip directly to the [Deployment Instructions](#deployment-instructions) if you 
 
 - Click on "Next: Review + Create" to... well, review your deployment parameters! If you're happy with them (and the validation checks pass), click ¨Create"
 
-- The provisioning of your Things Stack instance will take 10-20 minutes. I recommend you use this time to go through the [Things Stack documentation](https://thethingsstack.io/getting-started/).
+- The provisioning of your Things Stack instance should take around 20 minutes. I recommend you use this time to go through the [Things Stack documentation](https://thethingsstack.io/getting-started/).
 
-- Once the deployment is complete, you can access the console of your brand new Things Stack instance at the URL indicated in the "Outputs" section of your deployment. It should look something like: `https://ttnv3-myinstance.eastus.cloudapp.azure.com/console`.
+- Once the deployment is complete and the main Virtual Machine is showing up with a tag `status: TTN_RUNNING` , you can access the console of your brand new Things Stack instance at the URL indicated in the "Outputs" section of your deployment. It should look something like: `https://ttnv3-myinstance.eastus.cloudapp.azure.com/console`.
 
   ![The Things Stack on Azure - Outputs on successful deployment][deployment-output]
-  
-  **Important**: The first time you will open the console, **your browser may complain about an untrusted TLS connection**, which is due to the TLS certificate not being fully created yet. Just refresh the browser and all should be back to normal!
+
+  <u>**Important #1**</u>: It might **initially take up to 10 minutes** for the VM to be fully setup with The Things Stack. This is mainly due to the initial indexing of the device repository taking quite some time.
+
+  <u>**Important #2**</u>: The first time you will open the console, **your browser may complain about an untrusted TLS connection**, which is due to the TLS certificate not being fully created yet. Just refresh the browser and all should be back to normal!
 
 - Enjoy! 🙂
 
