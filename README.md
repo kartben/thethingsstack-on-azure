@@ -9,6 +9,7 @@ Skip directly to the [Deployment Instructions](#deployment-instructions) if you 
   - [Supporting Resources](#supporting-resources)
   - [Main Compute Resources](#main-compute-resources)
 - [FAQ](#faq)
+  - [I am getting an ERR_SSL_PROTOCOL_ERROR when trying to connect to the web console over HTTPS](#i-am-getting-an-err_ssl_protocol_error-when-trying-to-connect-to-the-web-console-over-https)
   - [How big of a fleet can I connect?](#how-big-of-a-fleet-can-i-connect)
   - [How much is this going to cost me?](#how-much-is-this-going-to-cost-me)
 
@@ -103,6 +104,13 @@ For security and performance reasons, the Redis endpoint is made available to th
 For security reasons, the PostgreSQL instance is configured to only allow connections originating from the virtual network where the main VM is running.
 
 ## FAQ
+
+
+### I am getting an ERR_SSL_PROTOCOL_ERROR when trying to connect to the web console over HTTPS
+
+A Let's Encrypt SSL certificate is automatically generated for your server when it's first launched. If you provided an invalid "admin email" address in the ARM template, this will cause the certficate generation to fail, making the HTTPS endpoint effectively unreachable.
+
+You can fix the issue by manually editing the `tls.acme.email` entry of your `/ttn/lorawan-stack/config.yml` configuration file and restarting the Things Stack service (`sudo systemctl restart lorawan-service`)
 
 ### How big of a fleet can I connect?
 
