@@ -223,7 +223,7 @@ runcmd:
   
   - export KEYVAULT_NAME=%%KEYVAULT_NAME%% 
 
-  - TEMP_DEB="$(mktemp)" && wget -O "$TEMP_DEB" 'https://github.com/TheThingsNetwork/lorawan-stack/releases/download/v3.14.1/lorawan-stack_3.14.1_linux_amd64.deb' && sudo dpkg -i "$TEMP_DEB" && rm -f "$TEMP_DEB"
+  - TEMP_DEB="$(mktemp)" && wget -O "$TEMP_DEB" 'https://github.com/TheThingsNetwork/lorawan-stack/releases/download/v3.17.2/lorawan-stack_3.17.2_linux_amd64.deb' && sudo dpkg -i "$TEMP_DEB" && rm -f "$TEMP_DEB"
 
   # Init identity server database
   - /ttn/lorawan-stack/ttn-lw-stack -c /ttn/lorawan-stack/config.yml is-db init
